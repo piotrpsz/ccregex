@@ -16,17 +16,13 @@ find_package(Qt6 COMPONENTS
 add_executable(ccregex main.cpp
         MainWindow.cc
         MainWindow.h
-        RegexEdit.cc
-        RegexEdit.h
-        ReplaceEdit.cc
-        ReplaceEdit.h
-        SourceEdit.cc
-        SourceEdit.h
-        ResultView.cc
-        ResultView.h
         OptionsWidget.cc
         OptionsWidget.h
-        Settings.h)
+        Settings.h
+        Editor.cpp
+        Editor.h
+        Component.cpp
+        Component.h)
 target_link_libraries(ccregex
         Qt::Core
         Qt::Gui

@@ -5,13 +5,10 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "MainWindow.h"
-#include "RegexEdit.h"
-#include "ResultView.h"
-#include "ReplaceEdit.h"
-#include "SourceEdit.h"
 #include "OptionsWidget.h"
 #include "Settings.h"
 #include <QSplitter>
+#include "Component.h"
 
 static QString const MainWindowSize = "MainWindow/Size";
 static QString const MainWindowPosition = "MainWindow/Position";
@@ -21,23 +18,26 @@ MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
     main_splitter_{new QSplitter(Qt::Horizontal)},
     windows_splitter_{new QSplitter{Qt::Vertical}},
-    replace_edit_{new ReplaceEdit},
-    regex_edit_{new RegexEdit},
-    source_edit_{new SourceEdit},
-    result_view_{new ResultView},
+    replace_edit_{new Component("Replacement String")},
+    regex_edit_{new Component("Regular Expression")},
+    source_edit_{new Component("Source String")},
+    result_view_{new Component("Result")},
     options_widget_{new OptionsWidget}
 {
     setWindowTitle("cc-regex v. 0.0.1");
 
     windows_splitter_->setHandleWidth(1);
+    windows_splitter_->setChildrenCollapsible(false);
     windows_splitter_->addWidget(regex_edit_);
     windows_splitter_->addWidget(source_edit_);
     windows_splitter_->addWidget(replace_edit_);
     windows_splitter_->addWidget(result_view_);
 
     main_splitter_->setHandleWidth(1);
+    main_splitter_->setChildrenCollapsible(false);
     main_splitter_->addWidget(windows_splitter_);
     main_splitter_->addWidget(options_widget_);
+
     setCentralWidget(main_splitter_);
 }
 

@@ -9,10 +9,7 @@
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
-class ReplaceEdit;
-class RegexEdit;
-class SourceEdit;
-class ResultView;
+class Component;
 class OptionsWidget;
 class QSplitter;
 class QShowEvent;
@@ -28,10 +25,10 @@ public:
 private:
     QSplitter* const main_splitter_;
     QSplitter* const windows_splitter_;
-    ReplaceEdit* const replace_edit_;
-    RegexEdit* const regex_edit_;
-    SourceEdit* const source_edit_;
-    ResultView* const result_view_;
+    Component* const replace_edit_;
+    Component* const regex_edit_;
+    Component* const source_edit_;
+    Component* const result_view_;
     OptionsWidget* const options_widget_;
     bool first_show_{true};
 };
