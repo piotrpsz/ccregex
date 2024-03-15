@@ -5,13 +5,16 @@
 
 #include "Types.h"
 #include <QTextEdit>
+#include <vector>
+#include <string>
 
 class Editor : public QTextEdit {
 public:
     explicit Editor(QWidget* parent = nullptr);
     ~Editor() override = default;
 
-    qstr content() const noexcept {
+    [[nodiscard]] qstr content() const& {
         return toPlainText();
     }
+    void set(std::vector<std::string> const& data) noexcept;
 };

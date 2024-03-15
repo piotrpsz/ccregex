@@ -48,6 +48,7 @@ private:
     qstr last_used_dir_{};
     qstr last_used_file_name_{};
 
+    static qstr const AppName;
     static char const * const FileTopMenu;
     static char const * const HelpTopMenu;
     static char const * const FileOpen;
@@ -55,6 +56,13 @@ private:
     static char const * const FileSaveAs;
     static char const * const Clear;
     static char const * const About;
+    static char const * const NameFilter;
+    static char const * const FileExt;
+    static char const * const ReadError;
+    static char const * const NoContentToSave;
+    static char const * const TryLater;
+    static char const * const FileAlreadyExist;
+    static char const * const WillOverwrite;
     static qstr const MainWindowSize;
     static qstr const MainWindowPosition;
     static qstr const MainWindowState;

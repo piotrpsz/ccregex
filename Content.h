@@ -72,7 +72,7 @@ struct glz::meta<Content> {
     static constexpr auto value = object(
             "regex", &Content::regex,
             "source", &Content::source,
-            "replacement", &Content::replacement,
+//            "replacement", &Content::replacement,
             "result", &Content::result
             );
 };

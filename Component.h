@@ -8,6 +8,7 @@
 -------------------------------------------------------------------*/
 #include "Types.h"
 #include "Editor.h"
+
 #include <QWidget>
 
 /*------- forward declarations:
@@ -21,8 +22,11 @@ public:
     explicit Component(qstr const& title, QWidget* parent = nullptr);
     ~Component() override = default;
 
-    QString content() const noexcept {
+    [[nodiscard]] qstr content() const noexcept {
         return editor_->content();
+    }
+    void set(std::vector<std::string> const& data) noexcept {
+        editor_->set(data);
     }
 private:
     Editor* const editor_;

@@ -8,10 +8,7 @@
 #include "Settings.h"
 #include "Content.h"
 #include "Component.h"
-#include <QDir>
 #include <QMenu>
-#include <QDebug>
-#include <QFile>
 #include <QMenuBar>
 #include <QSplitter>
 #include <QShortcut>
@@ -25,6 +22,7 @@
 
 /*------- static constants::
 -------------------------------------------------------------------*/
+qstr const MainWindow::AppName = "cc-regex v. 0.0.1";
 char const * const MainWindow::FileTopMenu = QT_TR_NOOP("File");
 char const * const MainWindow::HelpTopMenu = QT_TR_NOOP("Help");
 char const * const MainWindow::FileOpen = QT_TR_NOOP("Open File ...");
@@ -32,6 +30,13 @@ char const * const MainWindow::FileSave = QT_TR_NOOP("Save File ...");
 char const * const MainWindow::FileSaveAs = QT_TR_NOOP("Save File As ...");
 char const * const MainWindow::Clear = QT_TR_NOOP("Clear");
 char const * const MainWindow::About = QT_TR_NOOP("About");
+char const * const MainWindow::NameFilter = QT_TR_NOOP("Regex: (*.%1)");
+char const * const MainWindow::FileExt = QT_TR_NOOP("crgx");
+char const * const MainWindow::ReadError = QT_TR_NOOP("Something went wrong while reading the file.");
+char const * const MainWindow::NoContentToSave = QT_TR_NOOP("There is no content to save.");
+char const * const MainWindow::TryLater = QT_TR_NOOP("If you get something, try again.");
+char const * const MainWindow::FileAlreadyExist = QT_TR_NOOP("The file '%1' already exists.");
+char const * const MainWindow::WillOverwrite = QT_TR_NOOP("You want to overwrite it?");
 qstr const MainWindow::MainWindowSize = "MainWindow/Size";
 qstr const MainWindow::MainWindowPosition = "MainWindow/Position";
 qstr const MainWindow::MainWindowState = "MainWindow/State";
@@ -48,14 +53,14 @@ MainWindow::MainWindow(QWidget* const parent) :
     result_view_{new Component("Result")},
     options_widget_{new OptionsWidget}
 {
-    setWindowTitle("cc-regex v. 0.0.1");
+    setWindowTitle(AppName);
     create_menu();
 
     windows_splitter_->setHandleWidth(1);
     windows_splitter_->setChildrenCollapsible(false);
     windows_splitter_->addWidget(regex_edit_);
     windows_splitter_->addWidget(source_edit_);
-    windows_splitter_->addWidget(replace_edit_);
+//    windows_splitter_->addWidget(replace_edit_);
     windows_splitter_->addWidget(result_view_);
 
     main_splitter_->setHandleWidth(1);
@@ -90,6 +95,7 @@ void MainWindow::create_menu() noexcept {
     menuBar()->addMenu(file);
 
     //-------------------------------------
+
     auto const help = new QMenu{tr(HelpTopMenu)};
     auto const about = new QAction{tr(About)};
     connect(about, &QAction::triggered, this, &MainWindow::about);
@@ -128,6 +134,7 @@ void MainWindow::closeEvent(QCloseEvent*) {
     sts.save(LastUsedFile, last_used_file_name_);
 }
 
+// Reads data from a file.
 void MainWindow::open() noexcept {
     QFileDialog dialog(this);
     dialog.setOption(QFileDialog::DontUseNativeDialog);
@@ -135,8 +142,8 @@ void MainWindow::open() noexcept {
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setViewMode(QFileDialog::List);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    dialog.setNameFilter("Regex: (*.crgx)");
-    dialog.setDefaultSuffix("crgx");
+    dialog.setNameFilter(tr(NameFilter).arg(FileExt));
+    dialog.setDefaultSuffix(FileExt);
     dialog.selectFile(last_used_file_name_);
     dialog.setDirectory(last_used_dir_);
     if (dialog.exec()) {
@@ -150,14 +157,22 @@ void MainWindow::open() noexcept {
             buffer.resize(size);
             f.read(buffer.data(), size);
             if (f.fail() or f.gcount() not_eq size) {
-                std::cerr << "Something went wrong while reading the file\n";
+                std::cerr << tr(ReadError).toStdString() << '\n';
+                QMessageBox::critical(this, AppName, tr(ReadError));
                 return;
+            }
+            if (auto cnt = Content::from_json(buffer); cnt) {
+                auto data = cnt.value();
+                regex_edit_->set(data.regex);
+                source_edit_->set(data.source);
+                replace_edit_->set(data.replacement);
+                result_view_->set(data.result);
             }
         }
     }
-
 }
 
+// Saves data to a file.
 void MainWindow::save() noexcept {
     auto transform = [](qstr const& str) -> std::vector<std::string> {
         std::vector<std::string> buffer;
@@ -178,8 +193,8 @@ void MainWindow::save() noexcept {
     Content cnt{regex_content, source_content, replace_content, result_content};
     if (cnt.empty()) {
         QMessageBox box;
-        box.setText("There is no content to save.");
-        box.setInformativeText("If you get something, try again.");
+        box.setText(tr(NoContentToSave));
+        box.setInformativeText(tr(TryLater));
         box.setStandardButtons(QMessageBox::Ok);
         box.exec();
         return;
@@ -191,16 +206,16 @@ void MainWindow::save() noexcept {
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setViewMode(QFileDialog::List);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setNameFilter("Regex: (*.crgx)");
-    dialog.setDefaultSuffix("crgx");
+    dialog.setNameFilter(tr(NameFilter).arg(FileExt));
+    dialog.setDefaultSuffix(FileExt);
     dialog.selectFile(last_used_file_name_);
     dialog.setDirectory(last_used_dir_);
     if (dialog.exec()) {
         auto fi = QFileInfo(dialog.selectedFiles().first());
         if (fi.exists()) {
             QMessageBox box;
-            box.setText(QString("The file '%1'  already exists.").arg(fi.fileName()));
-            box.setInformativeText("You want to overwrite it?");
+            box.setText(QString(tr(FileAlreadyExist)).arg(fi.fileName()));
+            box.setInformativeText(tr(WillOverwrite));
             box.setStandardButtons(QMessageBox::Save|QMessageBox::Cancel);
             box.setDefaultButton(QMessageBox::Cancel);
             if (auto answer = box.exec(); answer == QMessageBox::Cancel)
@@ -225,13 +240,7 @@ void MainWindow::clear() noexcept {
 }
 
 void MainWindow::about() noexcept {
-    /*
-     QFile data(fileName);
-    if (data.open(QFile::WriteOnly | QFile::Truncate)) {
-         QTextStream out(&data);
-        out << "some_text";
-    }
-     */
+
     QMessageBox::about(this, "About",
                        "cc-regex is a regular expression testing program.\n"
                        "The program uses tools available for C++ programmers.\n\n"

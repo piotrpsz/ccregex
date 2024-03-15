@@ -3,6 +3,7 @@
 //
 
 #include "Editor.h"
+using namespace std;
 
 Editor::Editor(QWidget* const parent) :
         QTextEdit(parent)
@@ -24,4 +25,9 @@ Editor::Editor(QWidget* const parent) :
     font.setKerning(true);
     font.setPointSize(12);
     setFont(font);
+}
+
+void Editor::set(vector<string> const& data) noexcept {
+    for (auto const& text : data )
+        append(QString::fromStdString(text));
 }
