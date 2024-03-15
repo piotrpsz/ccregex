@@ -21,6 +21,7 @@ private slots:
 private:
     QRadioButton* const std_;
     QRadioButton* const qt_;
+    QRadioButton* const pcre2_;
     QRadioButton* const ecma_script_;
     QRadioButton* const basic_;
     QRadioButton* const extended_;

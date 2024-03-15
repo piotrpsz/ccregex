@@ -29,7 +29,11 @@ struct Content {
     Content& operator=(Content const&) = default;
     Content& operator=(Content&&) = default;
 
-    std::string to_json(bool const pretty = false) const noexcept {
+    [[nodiscard]] bool empty() const noexcept {
+        return regex.empty() and source.empty() and replacement.empty() and result.empty();
+    }
+
+    [[nodiscard]] std::string to_json(bool const pretty = false) const noexcept {
         auto buffer = glz::write_json(this);
         if (not pretty)
             return buffer;

@@ -34,6 +34,7 @@ private slots:
     void save() noexcept;
     void save_as() noexcept;
     void clear() noexcept;
+    void about() noexcept;
 
 private:
     QSplitter* const main_splitter_;
@@ -44,7 +45,8 @@ private:
     Component* const result_view_;
     OptionsWidget* const options_widget_;
     bool first_show_{true};
-    qstr used_dir_{};
+    qstr last_used_dir_{};
+    qstr last_used_file_name_{};
 
     static char const * const FileTopMenu;
     static char const * const HelpTopMenu;
@@ -52,7 +54,10 @@ private:
     static char const * const FileSave;
     static char const * const FileSaveAs;
     static char const * const Clear;
+    static char const * const About;
     static qstr const MainWindowSize;
     static qstr const MainWindowPosition;
     static qstr const MainWindowState;
+    static qstr const LastUsedDirectory;
+    static qstr const LastUsedFile;
 };

@@ -11,11 +11,15 @@
 #include <QDir>
 #include <QMenu>
 #include <QDebug>
+#include <QFile>
 #include <QMenuBar>
 #include <QSplitter>
 #include <QShortcut>
+#include <QFileInfo>
 #include <QFileDialog>
+#include <QMessageBox>
 #include "OptionsWidget.h"
+#include <fstream>
 #include <vector>
 #include <string>
 
@@ -27,9 +31,12 @@ char const * const MainWindow::FileOpen = QT_TR_NOOP("Open File ...");
 char const * const MainWindow::FileSave = QT_TR_NOOP("Save File ...");
 char const * const MainWindow::FileSaveAs = QT_TR_NOOP("Save File As ...");
 char const * const MainWindow::Clear = QT_TR_NOOP("Clear");
+char const * const MainWindow::About = QT_TR_NOOP("About");
 qstr const MainWindow::MainWindowSize = "MainWindow/Size";
 qstr const MainWindow::MainWindowPosition = "MainWindow/Position";
 qstr const MainWindow::MainWindowState = "MainWindow/State";
+qstr const MainWindow::LastUsedDirectory = "LastUsed/Directory";
+qstr const MainWindow::LastUsedFile = "LastUsed/File";
 
 MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
@@ -60,8 +67,6 @@ MainWindow::MainWindow(QWidget* const parent) :
 }
 
 void MainWindow::create_menu() noexcept {
-    menuBar()->addMenu(new QMenu{tr(HelpTopMenu)});
-
     auto const file = new QMenu{tr(FileTopMenu)};
     auto const open = new QAction{tr(FileOpen)};
     auto const save = new QAction{tr(FileSave)};
@@ -83,6 +88,13 @@ void MainWindow::create_menu() noexcept {
     file->addSeparator();
     file->addAction(clear);
     menuBar()->addMenu(file);
+
+    //-------------------------------------
+    auto const help = new QMenu{tr(HelpTopMenu)};
+    auto const about = new QAction{tr(About)};
+    connect(about, &QAction::triggered, this, &MainWindow::about);
+    help->addAction(about);
+    menuBar()->addMenu(help);
 }
 
 void MainWindow::showEvent(QShowEvent*) {
@@ -101,6 +113,10 @@ void MainWindow::showEvent(QShowEvent*) {
         move(data.value().toPoint());
     if (auto data = sts.read(MainWindowSize); data)
         restoreState(data.value().toByteArray());
+    if (auto data = sts.read(LastUsedDirectory); data)
+        last_used_dir_ = data.value().toString();
+    if (auto data = sts.read(LastUsedFile); data)
+        last_used_file_name_ = data.value().toString();
 }
 
 void MainWindow::closeEvent(QCloseEvent*) {
@@ -108,38 +124,96 @@ void MainWindow::closeEvent(QCloseEvent*) {
     sts.save(MainWindowState, saveState());
     sts.save(MainWindowPosition, pos());
     sts.save(MainWindowSize, size());
+    sts.save(LastUsedDirectory, last_used_dir_);
+    sts.save(LastUsedFile, last_used_file_name_);
 }
 
 void MainWindow::open() noexcept {
-    qInfo() << "open slot";
+    QFileDialog dialog(this);
+    dialog.setOption(QFileDialog::DontUseNativeDialog);
+    dialog.setOption(QFileDialog::DontConfirmOverwrite);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setViewMode(QFileDialog::List);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setNameFilter("Regex: (*.crgx)");
+    dialog.setDefaultSuffix("crgx");
+    dialog.selectFile(last_used_file_name_);
+    dialog.setDirectory(last_used_dir_);
+    if (dialog.exec()) {
+        auto path = dialog.selectedFiles().first();
+        std::ifstream f(path.toStdString());
+        if (f.is_open()) {
+            f.seekg(0, std::ios_base::end);
+            auto size = f.tellg();
+            f.seekg(0, std::ios_base::beg);
+            std::string buffer;
+            buffer.resize(size);
+            f.read(buffer.data(), size);
+            if (f.fail() or f.gcount() not_eq size) {
+                std::cerr << "Something went wrong while reading the file\n";
+                return;
+            }
+        }
+    }
+
 }
 
 void MainWindow::save() noexcept {
-    qInfo() << "save slot";
-
     auto transform = [](qstr const& str) -> std::vector<std::string> {
         std::vector<std::string> buffer;
-        auto data = str.split('\n');
-        buffer.reserve(data.size());
-        for (auto const item : data)
-            buffer.push_back(item.toStdString());
+        if (not str.isEmpty()) {
+            auto data = str.split('\n');
+            buffer.reserve(data.size());
+            for (auto const item: data)
+                buffer.push_back(item.toStdString());
+        }
         return std::move(buffer);
     };
 
-    auto regex_content = transform(regex_edit_->content());
-    auto source_content = transform(source_edit_->content());
-    auto replace_content = transform(replace_edit_->content());
-    auto result_content = transform(result_view_->content());
+    auto regex_content = transform(regex_edit_->content().trimmed());
+    auto source_content = transform(source_edit_->content().trimmed());
+    auto replace_content = transform(replace_edit_->content().trimmed());
+    auto result_content = transform(result_view_->content().trimmed());
 
     Content cnt{regex_content, source_content, replace_content, result_content};
-    std::cout << cnt << '\n';
-    std::cout << "-------------------------\n";
-    std::cout << cnt.to_json(true) << '\n';
+    if (cnt.empty()) {
+        QMessageBox box;
+        box.setText("There is no content to save.");
+        box.setInformativeText("If you get something, try again.");
+        box.setStandardButtons(QMessageBox::Ok);
+        box.exec();
+        return;
+    }
 
-    auto dir = used_dir_.isEmpty() ? QDir::homePath() : used_dir_;
-//    QFileDialog::AcceptSave
-    QFileDialog::getSaveFileName(this, "Save data to a file", dir, "", nullptr);
-//    dialog.exec();
+    QFileDialog dialog(this);
+    dialog.setOption(QFileDialog::DontUseNativeDialog);
+    dialog.setOption(QFileDialog::DontConfirmOverwrite);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setViewMode(QFileDialog::List);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setNameFilter("Regex: (*.crgx)");
+    dialog.setDefaultSuffix("crgx");
+    dialog.selectFile(last_used_file_name_);
+    dialog.setDirectory(last_used_dir_);
+    if (dialog.exec()) {
+        auto fi = QFileInfo(dialog.selectedFiles().first());
+        if (fi.exists()) {
+            QMessageBox box;
+            box.setText(QString("The file '%1'  already exists.").arg(fi.fileName()));
+            box.setInformativeText("You want to overwrite it?");
+            box.setStandardButtons(QMessageBox::Save|QMessageBox::Cancel);
+            box.setDefaultButton(QMessageBox::Cancel);
+            if (auto answer = box.exec(); answer == QMessageBox::Cancel)
+                return;
+        }
+        last_used_dir_ = fi.path();
+        last_used_file_name_ = fi.fileName();
+        std::ofstream f(fi.absoluteFilePath().toStdString());
+        if (f.is_open()) {
+            auto str = cnt.to_json();
+            f.write(str.data(), int(str.size()));
+        }
+    }
 }
 
 void MainWindow::save_as() noexcept {
@@ -148,4 +222,19 @@ void MainWindow::save_as() noexcept {
 
 void MainWindow::clear() noexcept {
     qInfo() << "clear slot";
+}
+
+void MainWindow::about() noexcept {
+    /*
+     QFile data(fileName);
+    if (data.open(QFile::WriteOnly | QFile::Truncate)) {
+         QTextStream out(&data);
+        out << "some_text";
+    }
+     */
+    QMessageBox::about(this, "About",
+                       "cc-regex is a regular expression testing program.\n"
+                       "The program uses tools available for C++ programmers.\n\n"
+                       "Author: Piotr Pszczółkowski (piotr@beesoft.pl)."
+    );
 }

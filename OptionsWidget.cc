@@ -15,6 +15,7 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     QWidget(parent),
     std_{new QRadioButton{"std::regex (cpp standard)"}},
     qt_{new QRadioButton{"QRegularExpression (Qt standard)"}},
+    pcre2_{new QRadioButton{"pcre2 (library using Perl5 syntax and semantic)"}},
     ecma_script_{ new QRadioButton{"ECMAScript modified grammar (default)"}},
     basic_{new QRadioButton{"basic POSIX grammar"}},
     extended_{new QRadioButton{"extended POSIX grammar"}},
@@ -37,6 +38,7 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     auto standard_layout{new QVBoxLayout};
     standard_layout->addWidget(std_);
     standard_layout->addWidget(qt_);
+    standard_layout->addWidget(pcre2_);
     standard_group->setLayout(standard_layout);
 
     auto grammar_group{new QGroupBox{"Grammar option"}};

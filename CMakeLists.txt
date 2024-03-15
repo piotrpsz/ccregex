@@ -6,6 +6,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+find_package(Qt6 COMPONENTS
+        Core
+        Gui
+        Widgets
+        REQUIRED)
+
+
 include(FetchContent)
 FetchContent_Declare(
         glaze
@@ -14,12 +21,6 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(glaze)
-
-find_package(Qt6 COMPONENTS
-        Core
-        Gui
-        Widgets
-        REQUIRED)
 
 add_executable(ccregex main.cpp
         MainWindow.cc
@@ -35,11 +36,13 @@ add_executable(ccregex main.cpp
         EventController.h
         Types.h
         Event.h
-        Content.h)
+        Content.h
+        Regex.cc
+        Regex.h)
 target_link_libraries(ccregex
-        Qt::Core
-        Qt::Gui
-        Qt::Widgets
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
         glaze::glaze
+        pcre2-8
 )
-
