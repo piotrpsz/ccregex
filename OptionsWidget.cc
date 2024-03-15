@@ -22,7 +22,7 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     grep_{new QRadioButton{"GREP utility in POSIX grammar"}},
     egrep_{new QRadioButton{"GREP with -E option in POSIX grammar"}},
     icace_{new QCheckBox{"character matching without regard to case."}},
-    nosubs_{new QCheckBox{"all marked sub-expressions (expr) are treated as non-marking "}},
+    nosubs_{new QCheckBox{"all marked sub-expressions are treated as non-marking "}},
     optimize_{new QCheckBox{"faster matching, slower construction"}},
     collate_{new QCheckBox{"character ranges locale sensitive"}},
     multiline_{new QCheckBox{"anchor characters for multiline"}},

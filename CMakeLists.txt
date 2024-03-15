@@ -6,6 +6,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+include(FetchContent)
+FetchContent_Declare(
+        glaze
+        GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(glaze)
 
 find_package(Qt6 COMPONENTS
         Core
@@ -21,11 +29,17 @@ add_executable(ccregex main.cpp
         Settings.h
         Editor.cpp
         Editor.h
-        Component.cpp
-        Component.h)
+        Component.cc
+        Component.h
+        EventController.cc
+        EventController.h
+        Types.h
+        Event.h
+        Content.h)
 target_link_libraries(ccregex
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        glaze::glaze
 )
 

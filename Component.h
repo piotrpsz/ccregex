@@ -6,8 +6,9 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
+#include "Types.h"
+#include "Editor.h"
 #include <QWidget>
-#include <QString>
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
@@ -17,8 +18,12 @@ class Editor;
 -------------------------------------------------------------------*/
 class Component : public QWidget {
 public:
-    explicit Component(QString const& title, QWidget* parent = nullptr);
+    explicit Component(qstr const& title, QWidget* parent = nullptr);
     ~Component() override = default;
+
+    QString content() const noexcept {
+        return editor_->content();
+    }
 private:
     Editor* const editor_;
 };
