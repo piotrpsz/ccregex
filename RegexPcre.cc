@@ -1,7 +1,6 @@
 // MIT License
 //
 // Copyright (c) 2023 Piotr Pszczółkowski
-// Created by Piotr Pszczółkowski on 15/03/2024.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +19,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-// Based on:
-// https://www.pcre.org/current/doc/html/index.html
+//
+// Created by Piotr Pszczółkowski on 15/03/2024.
+// Based on: // https://www.pcre.org/current/doc/html/index.html
 
 /*------- include files:
 -------------------------------------------------------------------*/
@@ -72,7 +72,7 @@ std::vector<RegexPcre::Match> RegexPcre::run(bool const find_all) const noexcept
     std::vector<Match> matches{};
     u32 const pos = ovector[0];
     u32 const length = ovector[1] - ovector[0];
-    matches.push_back(Match{pos, length});
+    matches.push_back(Match{.offset = pos, .size = length});
 
     if (not find_all) {
         pcre2_match_data_free(match_data_);
@@ -154,7 +154,7 @@ std::vector<RegexPcre::Match> RegexPcre::rest(PCRE2_SIZE *ovector) const noexcep
 
         u32 const pos = ovector[0];
         u32 const length = ovector[1] - ovector[0];
-        matches.push_back(Match{pos, length});
+        matches.push_back(Match{.offset =  pos, .size =  length});
     }
     matches.shrink_to_fit();
     return matches;

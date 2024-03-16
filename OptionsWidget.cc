@@ -1,7 +1,6 @@
 // MIT License
 //
 // Copyright (c) 2023 Piotr Pszczółkowski
-// Created by Piotr Pszczółkowski on 14/03/2024.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +19,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// Created by Piotr Pszczółkowski on 14/03/2024.
 
 /*------- include files:
 -------------------------------------------------------------------*/
+#include "Config.h"
 #include "OptionsWidget.h"
+#include "EventController.h"
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QBoxLayout>
@@ -31,6 +34,8 @@
 #include <QApplication>
 #include <QRadioButton>
 #include <iostream>
+#include <regex>
+#include <glaze/glaze.hpp>
 
 
 OptionsWidget::OptionsWidget(QWidget* const parent) :
@@ -38,7 +43,7 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     std_{new QRadioButton{"std::regex (cpp standard)"}},
     qt_{new QRadioButton{"QRegularExpression (Qt standard)"}},
     pcre2_{new QRadioButton{"pcre2 (library using Perl5 syntax and semantic)"}},
-    ecma_script_{ new QRadioButton{"ECMAScript modified grammar (default)"}},
+    ecma_{ new QRadioButton{"ECMAScript modified grammar (default)"}},
     basic_{new QRadioButton{"basic POSIX grammar"}},
     extended_{new QRadioButton{"extended POSIX grammar"}},
     awk_{new QRadioButton{"AWK utility in POSIX grammar"}},
@@ -54,7 +59,7 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     exit_{new QPushButton{"Exit"}}
 {
     std_->setChecked(true);
-    ecma_script_->setChecked(true);
+    ecma_->setChecked(true);
 
     auto standard_group{new QGroupBox{"Tool"}};
     auto standard_layout{new QVBoxLayout};
@@ -67,7 +72,7 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
 
     auto grammar_group{new QGroupBox{"Grammar option"}};
     auto grammar_layout{new QVBoxLayout};
-    grammar_layout->addWidget(ecma_script_);
+    grammar_layout->addWidget(ecma_);
     grammar_layout->addWidget(basic_);
     grammar_layout->addWidget(extended_);
     grammar_layout->addWidget(awk_);
@@ -108,11 +113,32 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
 }
 
 void OptionsWidget::run_slot() noexcept {
-    std::cout << "run slot\n";
+    auto tool = tool::Std;
+    if (qt_->isChecked()) tool = tool::Qt;
+    if (pcre2_->isChecked()) tool = tool::Pcre2;
+
+    std::regex_constants::syntax_option_type grammar = std::regex_constants::ECMAScript;
+    if (basic_->isChecked()) grammar = std::regex_constants::basic;
+    if (extended_->isChecked()) grammar = std::regex_constants::extended;
+    if (awk_->isChecked()) grammar = std::regex_constants::awk;
+    if (grep_->isChecked()) grammar = std::regex_constants::grep;
+    if (egrep_->isChecked()) grammar = std::regex_constants::egrep;
+
+    std::vector<std::regex_constants::syntax_option_type> variations{};
+    if (icace_->isChecked()) variations.push_back(std::regex_constants::icase);
+    if (nosubs_->isChecked()) variations.push_back(std::regex_constants::nosubs);
+    if (optimize_->isChecked()) variations.push_back(std::regex_constants::optimize);
+    if (collate_->isChecked()) variations.push_back(std::regex_constants::collate);
+    if (multiline_->isChecked()) variations.push_back(std::regex_constants::multiline);
+
+    EventController::instance().send_event(event::RunRequest,
+                                           tool,
+                                           grammar,
+                                           qstr::fromStdString(glz::write_json(variations)));
 }
 
 void OptionsWidget::break_slot() noexcept {
-    std::cout << "break slot\n";
+    EventController::instance().send_event(event::RunRequest);
 }
 
 

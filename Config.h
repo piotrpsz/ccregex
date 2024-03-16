@@ -20,39 +20,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 15/03/2024.
+// Created by Piotr Pszczółkowski on 16/03/2024.
 #pragma once
 
-/*------- include files:
--------------------------------------------------------------------*/
-#include <QEvent>
-#include "Types.h"
+#include <regex>
+#include <vector>
+#include <unordered_map>
 
-/*------- class:
--------------------------------------------------------------------*/
-class Event : public QEvent {
-    qvec<qvar> data_;
-public:
-    template<typename... T>
-    explicit Event(int const id, T... args) : QEvent(static_cast<QEvent::Type>(id)) {
-        (..., data_.push_back(args));
-    }
-    qvec<qvar> data() && {
-        return std::move(data_);
-    }
-    qvec<qvar> const& data() const& {
-        return data_;
-    }
-};
-
-/*------- user's events:
--------------------------------------------------------------------*/
-namespace event {
+namespace tool {
     enum {
-        Dummy = (QEvent::User + 1),
-        OpenFile,
-        SaveFile,
-        RunRequest,
-        BreakRequest,
-   };
+        Std = 0,
+        Pcre2,
+        Qt
+    };
 }
+
+namespace grammar {
+    enum class Option { ecma = 0, basic, extended, awk, grep, egrep };
+}
+
+std::unordered_map<grammar::Option, std::regex_constants::syntax_option_type> tmap{
+        { grammar::Option::ecma, std::regex_constants::ECMAScript },
+        { grammar::Option::basic, std::regex_constants::basic},
+        { grammar::Option::extended, std::regex_constants::extended},
+
+};

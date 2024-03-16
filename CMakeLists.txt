@@ -37,6 +37,7 @@ set(APP_SOURCES
         Types.h
         Event.h
         Content.h
+        Config.h
 )
 set(APP_LIBS
         Qt6::Core
