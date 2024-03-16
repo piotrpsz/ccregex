@@ -60,7 +60,9 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     auto standard_layout{new QVBoxLayout};
     standard_layout->addWidget(std_);
     standard_layout->addWidget(qt_);
+#ifdef PCRE2_REGEX
     standard_layout->addWidget(pcre2_);
+#endif
     standard_group->setLayout(standard_layout);
 
     auto grammar_group{new QGroupBox{"Grammar option"}};
