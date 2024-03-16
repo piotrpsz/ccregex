@@ -1,7 +1,7 @@
 // MIT License
 //
 // Copyright (c) 2023 Piotr Pszczółkowski
-// Created by Piotr Pszczółkowski on 14/03/2024.
+// Created by Piotr Pszczółkowski on 15/03/2024.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,47 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
+// Based on:
+// https://www.pcre.org/current/doc/html/index.html
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include <QWidget>
+#include "Types.h"
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+#include <vector>
 
-/*------- forward declarations:
+/*------- include class:
 -------------------------------------------------------------------*/
-class QCheckBox;
-class QPushButton;
-class QRadioButton;
-
-/*------- class:
--------------------------------------------------------------------*/
-class OptionsWidget : public QWidget {
-    Q_OBJECT
+class RegexPcre {
+    PCRE2_SPTR8 pattern_;
+    PCRE2_SPTR8 subject_;
+    PCRE2_SIZE size_;
+    pcre2_code* re_;
+    pcre2_match_data *match_data_;
 public:
-    explicit OptionsWidget(QWidget* = nullptr);
-    ~OptionsWidget() override = default;
+    struct Match {
+        u32 offset, size;
+    };
 
-private slots:
-    void run_slot() noexcept;
-    void break_slot() noexcept;
+    RegexPcre(char const* pattern, char const* subject, u32 n);
+
+    /// Searches first match or all if needed.
+    /// \param find_all - a flag specifying whether the user wants to find all occurrences matching the pattern
+    /// \return vektor of matches occurences (see item_t).
+    [[nodiscard]] std::vector<Match> run(bool find_all = false) const noexcept;
 
 private:
-    QRadioButton* const std_;
-    QRadioButton* const qt_;
-    QRadioButton* const pcre2_;
-    QRadioButton* const ecma_script_;
-    QRadioButton* const basic_;
-    QRadioButton* const extended_;
-    QRadioButton* const awk_;
-    QRadioButton* const grep_;
-    QRadioButton* const egrep_;
-    QCheckBox* const icace_;
-    QCheckBox* const nosubs_;
-    QCheckBox* const optimize_;
-    QCheckBox* const collate_;
-    QCheckBox* const multiline_;
-    QPushButton* const run_;
-    QPushButton* const break_;
-    QPushButton* const exit_;
+    std::vector<Match> rest(PCRE2_SIZE *ovector) const noexcept;
+    PCRE2_SIZE update_utf8_size(PCRE2_SIZE ovector) const noexcept;
 };
-

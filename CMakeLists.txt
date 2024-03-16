@@ -37,8 +37,8 @@ add_executable(ccregex main.cpp
         Types.h
         Event.h
         Content.h
-        Regex.cc
-        Regex.h)
+        RegexPcre.cc
+        RegexPcre.h)
 target_link_libraries(ccregex
         Qt6::Core
         Qt6::Gui

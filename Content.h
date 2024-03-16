@@ -50,7 +50,7 @@ struct Content {
     }
 
     friend std::ostream &operator<<(std::ostream &s, Content const &r) noexcept {
-        s << "-- Regex:\n";
+        s << "-- RegexPcre:\n";
         for (auto const& str : r.regex)
             s << '\t' << str << '\n';
         s << "-- Source:\n";
