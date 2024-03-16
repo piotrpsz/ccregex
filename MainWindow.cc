@@ -29,6 +29,7 @@
 #include "Component.h"
 #include "MainWindow.h"
 #include "OptionsWidget.h"
+#include "EventController.h"
 #include <QMenu>
 #include <QMenuBar>
 #include <QSplitter>
@@ -39,6 +40,8 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <regex>
+#include <fmt/core.h>
 
 /*------- static constants::
 -------------------------------------------------------------------*/
@@ -70,7 +73,7 @@ MainWindow::MainWindow(QWidget* const parent) :
     replace_edit_{new Component("Replacement String")},
     regex_edit_{new Component("Regular Expression")},
     source_edit_{new Component("Source String")},
-    result_view_{new Component("Result")},
+    result_view_{new Component("Result", true)},
     options_widget_{new OptionsWidget}
 {
     setWindowTitle(AppName);
@@ -89,6 +92,8 @@ MainWindow::MainWindow(QWidget* const parent) :
     main_splitter_->addWidget(options_widget_);
 
     setCentralWidget(main_splitter_);
+
+    EventController::instance().append(this, event::RunRequest);
 }
 
 void MainWindow::create_menu() noexcept {
@@ -192,6 +197,55 @@ void MainWindow::open() noexcept {
     }
 }
 
+void MainWindow::customEvent(QEvent *event) {
+    result_view_->clear();
+    auto const e = dynamic_cast<Event*>(event);
+
+    switch (int(e->type())) {
+        case event::RunRequest:
+            std_regx();
+            break;
+
+    }
+}
+
+void MainWindow::std_regx() const noexcept {
+    auto pattern_lines = transform(regex_edit_->content());
+    auto source_lines = transform(source_edit_->content());
+    if (pattern_lines.empty() or source_lines.empty())
+        return;
+
+    for (auto const& pattern : pattern_lines) {
+        for (auto const& source : source_lines) {
+            std::regex rgx(pattern);
+            std::smatch match;
+            if (std::regex_match(source, match, rgx)) {
+                for (int i = 0; i < match.size(); ++i) {
+                    auto str = fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i));
+                    EventController::instance().send_event(event::AppendLine, qstr::fromStdString(str));
+                }
+            }
+            else {
+                EventController::instance().send_event(event::AppendLine, "not found");
+            }
+        }
+    }
+}
+
+std::vector<std::string> MainWindow::transform(qstr const& str) const noexcept {
+    std::vector<std::string> buffer;
+    if (not str.isEmpty()) {
+        auto data = str.split('\n');
+        buffer.reserve(data.size());
+        for (auto const item: data) {
+            auto text = item.trimmed();
+            if (not text.isEmpty())
+                buffer.push_back(item.toStdString());
+        }
+    }
+    return std::move(buffer);
+}
+
 // Saves data to a file.
 void MainWindow::save() noexcept {
     auto transform = [](qstr const& str) -> std::vector<std::string> {
@@ -256,7 +310,11 @@ void MainWindow::save_as() noexcept {
 }
 
 void MainWindow::clear() noexcept {
-    qInfo() << "clear slot";
+    regex_edit_->clear();
+    source_edit_->clear();
+    replace_edit_->clear();
+    result_view_->clear();
+    regex_edit_->active();
 }
 
 void MainWindow::about() noexcept {

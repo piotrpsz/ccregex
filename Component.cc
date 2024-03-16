@@ -26,13 +26,19 @@
 -------------------------------------------------------------------*/
 #include "Editor.h"
 #include "Component.h"
+#include "EventController.h"
 #include <QLabel>
 #include <QBoxLayout>
 
-Component::Component(QString const& title, QWidget *parent) :
+Component::Component(QString const& title, bool const read_only, QWidget *parent) :
         QWidget(parent),
         editor_{new Editor}
 {
+    if (read_only) {
+        editor_->setReadOnly(true);
+        EventController::instance().append(editor_, event::AppendLine);
+    }
+
     auto description{new QLabel{title}};
     auto font = description->font();
     font.setPointSize(11);

@@ -60,6 +60,10 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
 {
     std_->setChecked(true);
     ecma_->setChecked(true);
+    // actually implemented only std version
+    qt_->setEnabled(false);
+    pcre2_->setEnabled(false);
+
 
     auto standard_group{new QGroupBox{"Tool"}};
     auto standard_layout{new QVBoxLayout};

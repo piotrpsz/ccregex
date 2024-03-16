@@ -25,6 +25,7 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Editor.h"
+#include "EventController.h"
 using namespace std;
 
 Editor::Editor(QWidget* const parent) :
@@ -47,6 +48,22 @@ Editor::Editor(QWidget* const parent) :
     font.setKerning(true);
     font.setPointSize(12);
     setFont(font);
+}
+
+void Editor::customEvent(QEvent *event) {
+    auto const e = dynamic_cast<Event*>(event);
+
+    switch (int(e->type())) {
+        case event::AppendLine:
+            if (isReadOnly()) {
+                if (e->data().size() == 1) {
+                    auto text = e->data()[0].toString();
+                    append(text);
+                }
+            }
+            break;
+
+    }
 }
 
 void Editor::set(vector<string> const& data) noexcept {

@@ -38,7 +38,7 @@ class Editor;
 -------------------------------------------------------------------*/
 class Component : public QWidget {
 public:
-    explicit Component(qstr const& title, QWidget* parent = nullptr);
+    explicit Component(qstr const& title, bool read_only = false, QWidget* parent = nullptr);
     ~Component() override = default;
 
     [[nodiscard]] qstr content() const noexcept {
@@ -46,6 +46,12 @@ public:
     }
     void set(std::vector<std::string> const& data) noexcept {
         editor_->set(data);
+    }
+    void clear() const noexcept {
+        editor_->clear();
+    }
+    void active() const noexcept {
+        editor_->setFocus();
     }
 private:
     Editor* const editor_;

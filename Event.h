@@ -54,5 +54,6 @@ namespace event {
         SaveFile,
         RunRequest,
         BreakRequest,
+        AppendLine,
    };
 }

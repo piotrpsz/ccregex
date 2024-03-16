@@ -30,12 +30,18 @@
 #include <vector>
 #include <string>
 
+/*------- forward declaration:
+-------------------------------------------------------------------*/
+class QEvent;
+
 /*------- class:
 -------------------------------------------------------------------*/
 class Editor : public QTextEdit {
 public:
     explicit Editor(QWidget* parent = nullptr);
     ~Editor() override = default;
+
+    void customEvent(QEvent* event) override;
 
     [[nodiscard]] qstr content() const& {
         return toPlainText();

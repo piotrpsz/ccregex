@@ -20,6 +20,7 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED
 )
+find_package(fmt REQUIRED)
 
 set(APP_SOURCES
         main.cpp
@@ -44,6 +45,7 @@ set(APP_LIBS
         Qt6::Gui
         Qt6::Widgets
         glaze::glaze
+        fmt::fmt
 )
 
 if (PCRE2)

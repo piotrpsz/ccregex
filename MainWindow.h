@@ -46,6 +46,9 @@ public:
     void create_menu() noexcept;
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
+    void customEvent(QEvent* event) override;
+    void std_regx() const noexcept;
+    std::vector<std::string> transform(qstr const& str) const noexcept;
 
 private slots:
     void open() noexcept;
