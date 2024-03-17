@@ -188,6 +188,9 @@ void MainWindow::customEvent(QEvent *event) {
 
 
 void MainWindow::std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept {
+    auto opt = grammar;
+    for (auto it : vars)
+        opt |= it;
 
     auto pattern_lines = transform(regex_edit_->content());
     auto source_lines = transform(source_edit_->content());
@@ -196,7 +199,7 @@ void MainWindow::std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSy
 
     for (auto const& pattern : pattern_lines) {
         for (auto const& source : source_lines) {
-            std::regex rgx(pattern);
+            std::regex rgx(pattern, opt);
             auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
             auto match_end_it = std::sregex_iterator();
             for (auto it = match_begin_it; it != match_end_it; ++it) {
