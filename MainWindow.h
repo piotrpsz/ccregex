@@ -25,7 +25,9 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Types.h"
+#include "Component.h"
 #include <QMainWindow>
+#include <QMessageBox>
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
@@ -47,15 +49,29 @@ public:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
     void customEvent(QEvent* event) override;
-    void std_regx() const noexcept;
-    std::vector<std::string> transform(qstr const& str) const noexcept;
+    void std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept;
+    [[nodiscard]] std::vector<std::string> transform(qstr const& str) const noexcept;
 
 private slots:
     void open() noexcept;
     void save() noexcept;
     void save_as() noexcept;
-    void clear() noexcept;
-    void about() noexcept;
+
+    void about() noexcept {
+        QMessageBox::about(this, "About",
+                           "cc-regex is a regular expression testing program.\n"
+                           "The program uses tools available for C++ programmers.\n\n"
+                           "Author: Piotr Pszczółkowski (piotr@beesoft.pl)."
+        );
+    }
+
+    void clear() const noexcept {
+        regex_edit_->clear();
+        source_edit_->clear();
+        replace_edit_->clear();
+        result_view_->clear();
+        regex_edit_->active();
+    }
 
 private:
     QSplitter* const main_splitter_;

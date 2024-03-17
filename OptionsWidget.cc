@@ -24,7 +24,7 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include "Config.h"
+#include "Types.h"
 #include "OptionsWidget.h"
 #include "EventController.h"
 #include <QCheckBox>
@@ -34,7 +34,6 @@
 #include <QApplication>
 #include <QRadioButton>
 #include <iostream>
-#include <regex>
 #include <glaze/glaze.hpp>
 
 
@@ -121,14 +120,14 @@ void OptionsWidget::run_slot() noexcept {
     if (qt_->isChecked()) tool = tool::Qt;
     if (pcre2_->isChecked()) tool = tool::Pcre2;
 
-    std::regex_constants::syntax_option_type grammar = std::regex_constants::ECMAScript;
+    type::StdSyntaxOption grammar = std::regex_constants::ECMAScript;
     if (basic_->isChecked()) grammar = std::regex_constants::basic;
     if (extended_->isChecked()) grammar = std::regex_constants::extended;
     if (awk_->isChecked()) grammar = std::regex_constants::awk;
     if (grep_->isChecked()) grammar = std::regex_constants::grep;
     if (egrep_->isChecked()) grammar = std::regex_constants::egrep;
 
-    std::vector<std::regex_constants::syntax_option_type> variations{};
+    std::vector<type::StdSyntaxOption> variations{};
     if (icace_->isChecked()) variations.push_back(std::regex_constants::icase);
     if (nosubs_->isChecked()) variations.push_back(std::regex_constants::nosubs);
     if (optimize_->isChecked()) variations.push_back(std::regex_constants::optimize);

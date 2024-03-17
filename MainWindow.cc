@@ -42,6 +42,8 @@
 #include <string>
 #include <regex>
 #include <fmt/core.h>
+#include <thread>
+#include <chrono>
 
 /*------- static constants::
 -------------------------------------------------------------------*/
@@ -160,56 +162,33 @@ void MainWindow::closeEvent(QCloseEvent*) {
 }
 
 // Reads data from a file.
-void MainWindow::open() noexcept {
-    QFileDialog dialog(this);
-    dialog.setOption(QFileDialog::DontUseNativeDialog);
-    dialog.setOption(QFileDialog::DontConfirmOverwrite);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setViewMode(QFileDialog::List);
-    dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    dialog.setNameFilter(tr(NameFilter).arg(FileExt));
-    dialog.setDefaultSuffix(FileExt);
-    dialog.selectFile(last_used_file_name_);
-    dialog.setDirectory(last_used_dir_);
-    if (dialog.exec()) {
-        auto path = dialog.selectedFiles().first();
-        std::ifstream f(path.toStdString());
-        if (f.is_open()) {
-            f.seekg(0, std::ios_base::end);
-            auto size = f.tellg();
-            f.seekg(0, std::ios_base::beg);
-            std::string buffer;
-            buffer.resize(size);
-            f.read(buffer.data(), size);
-            if (f.fail() or f.gcount() not_eq size) {
-                std::cerr << tr(ReadError).toStdString() << '\n';
-                QMessageBox::critical(this, AppName, tr(ReadError));
-                return;
-            }
-            if (auto cnt = Content::from_json(buffer); cnt) {
-                auto data = cnt.value();
-                regex_edit_->set(data.regex);
-                source_edit_->set(data.source);
-                replace_edit_->set(data.replacement);
-                result_view_->set(data.result);
-            }
-        }
-    }
-}
 
 void MainWindow::customEvent(QEvent *event) {
     result_view_->clear();
     auto const e = dynamic_cast<Event*>(event);
 
     switch (int(e->type())) {
-        case event::RunRequest:
-            std_regx();
+        case event::RunRequest: {
+            result_view_->clear();
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(500ms);
+
+            auto tool = e->data()[0].toInt();
+            auto grammar = e->data()[1].toInt();
+            auto variations = e->data()[2].toString();
+
+            if (tool == tool::Std)
+                if (auto s = glz::read_json<std::vector<type::StdSyntaxOption>>(variations.toStdString()); s)
+                    std_regx(type::StdSyntaxOption(grammar), s.value());
             break;
+        }
 
     }
 }
 
-void MainWindow::std_regx() const noexcept {
+
+void MainWindow::std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept {
+
     auto pattern_lines = transform(regex_edit_->content());
     auto source_lines = transform(source_edit_->content());
     if (pattern_lines.empty() or source_lines.empty())
@@ -218,16 +197,17 @@ void MainWindow::std_regx() const noexcept {
     for (auto const& pattern : pattern_lines) {
         for (auto const& source : source_lines) {
             std::regex rgx(pattern);
-            std::smatch match;
-            if (std::regex_match(source, match, rgx)) {
+            auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
+            auto match_end_it = std::sregex_iterator();
+            for (auto it = match_begin_it; it != match_end_it; ++it) {
+                std::smatch match = *it;
+                EventController::instance().send_event(event::AppendLine, "--------------------------");
                 for (int i = 0; i < match.size(); ++i) {
-                    auto str = fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i));
+                    auto const str{fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i))};
                     EventController::instance().send_event(event::AppendLine, qstr::fromStdString(str));
                 }
             }
-            else {
-                EventController::instance().send_event(event::AppendLine, "not found");
-            }
+            EventController::instance().send_event(event::AppendLine, "--- END ---");
         }
     }
 }
@@ -246,19 +226,54 @@ std::vector<std::string> MainWindow::transform(qstr const& str) const noexcept {
     return std::move(buffer);
 }
 
+void MainWindow::open() noexcept {
+    clear();
+
+    QFileDialog dialog(this);
+    dialog.setOption(QFileDialog::DontUseNativeDialog);
+    dialog.setOption(QFileDialog::DontConfirmOverwrite);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setViewMode(QFileDialog::List);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setNameFilter(tr(NameFilter).arg(FileExt));
+    dialog.setDefaultSuffix(FileExt);
+    dialog.selectFile(last_used_file_name_);
+    dialog.setDirectory(last_used_dir_);
+    if (dialog.exec()) {
+        auto path = dialog.selectedFiles().first();
+        // Remember file references for future use.
+        QFileInfo fi{path};
+        last_used_dir_ = fi.path();
+        last_used_file_name_ = fi.fileName();
+
+        // Read the content.
+        std::ifstream f(path.toStdString());
+        if (f.is_open()) {
+            f.seekg(0, std::ios_base::end);
+            auto size = f.tellg();
+            f.seekg(0, std::ios_base::beg);
+            std::string buffer;
+            buffer.resize(size);
+            f.read(buffer.data(), size);
+            if (f.fail() or f.gcount() not_eq size) {
+                std::cerr << tr(ReadError).toStdString() << '\n';
+                QMessageBox::critical(this, AppName, tr(ReadError));
+                return;
+            }
+            // Fetch strings from JSON (file content).
+            if (auto cnt = Content::from_json(buffer); cnt) {
+                auto data = cnt.value();
+                regex_edit_->set(data.regex);
+                source_edit_->set(data.source);
+                replace_edit_->set(data.replacement);
+                result_view_->set(data.result);
+            }
+        }
+    }
+}
+
 // Saves data to a file.
 void MainWindow::save() noexcept {
-    auto transform = [](qstr const& str) -> std::vector<std::string> {
-        std::vector<std::string> buffer;
-        if (not str.isEmpty()) {
-            auto data = str.split('\n');
-            buffer.reserve(data.size());
-            for (auto const item: data)
-                buffer.push_back(item.toStdString());
-        }
-        return std::move(buffer);
-    };
-
     auto regex_content = transform(regex_edit_->content().trimmed());
     auto source_content = transform(source_edit_->content().trimmed());
     auto replace_content = transform(replace_edit_->content().trimmed());
@@ -291,7 +306,7 @@ void MainWindow::save() noexcept {
             box.setText(QString(tr(FileAlreadyExist)).arg(fi.fileName()));
             box.setInformativeText(tr(WillOverwrite));
             box.setStandardButtons(QMessageBox::Save|QMessageBox::Cancel);
-            box.setDefaultButton(QMessageBox::Cancel);
+            box.setDefaultButton(QMessageBox::Save);
             if (auto answer = box.exec(); answer == QMessageBox::Cancel)
                 return;
         }
@@ -307,21 +322,4 @@ void MainWindow::save() noexcept {
 
 void MainWindow::save_as() noexcept {
     qInfo() << "save as slot";
-}
-
-void MainWindow::clear() noexcept {
-    regex_edit_->clear();
-    source_edit_->clear();
-    replace_edit_->clear();
-    result_view_->clear();
-    regex_edit_->active();
-}
-
-void MainWindow::about() noexcept {
-
-    QMessageBox::about(this, "About",
-                       "cc-regex is a regular expression testing program.\n"
-                       "The program uses tools available for C++ programmers.\n\n"
-                       "Author: Piotr Pszczółkowski (piotr@beesoft.pl)."
-    );
 }
