@@ -67,6 +67,7 @@ qstr const MainWindow::MainWindowPosition = "MainWindow/Position";
 qstr const MainWindow::MainWindowState = "MainWindow/State";
 qstr const MainWindow::LastUsedDirectory = "LastUsed/Directory";
 qstr const MainWindow::LastUsedFile = "LastUsed/File";
+qstr const MainWindow::Error = "Error";
 
 MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
@@ -199,23 +200,30 @@ void MainWindow::std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSy
 
     for (auto const& pattern : pattern_lines) {
         for (auto const& source : source_lines) {
-            std::regex rgx(pattern, opt);
-            auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
-            auto match_end_it = std::sregex_iterator();
-            for (auto it = match_begin_it; it != match_end_it; ++it) {
-                std::smatch match = *it;
-                EventController::instance().send_event(event::AppendLine, "--------------------------");
-                for (int i = 0; i < match.size(); ++i) {
-                    auto const str{fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i))};
-                    EventController::instance().send_event(event::AppendLine, qstr::fromStdString(str));
+            try {
+                std::regex rgx(pattern, opt);
+                auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
+                auto match_end_it = std::sregex_iterator();
+                for (auto it = match_begin_it; it != match_end_it; ++it) {
+                    std::smatch match = *it;
+                    EventController::instance().send_event(event::AppendLine, "--------------------------");
+                    for (int i = 0; i < match.size(); ++i) {
+                        auto const str{fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i))};
+                        EventController::instance().send_event(event::AppendLine, qstr::fromStdString(str));
+                    }
                 }
+            }
+            catch (std::regex_error const& e) {
+                auto msg = qstr::fromStdString(e.what());
+                QMessageBox::critical((QWidget *) this, Error, msg);
+                return;
             }
             EventController::instance().send_event(event::AppendLine, "--- END ---");
         }
     }
 }
 
-std::vector<std::string> MainWindow::transform(qstr const& str) const noexcept {
+std::vector<std::string> MainWindow::transform(qstr const& str) noexcept {
     std::vector<std::string> buffer;
     if (not str.isEmpty()) {
         auto data = str.split('\n');

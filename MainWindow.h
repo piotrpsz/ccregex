@@ -50,7 +50,7 @@ public:
     void closeEvent(QCloseEvent* event) override;
     void customEvent(QEvent* event) override;
     void std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept;
-    [[nodiscard]] std::vector<std::string> transform(qstr const& str) const noexcept;
+    [[nodiscard]] static std::vector<std::string> transform(qstr const& str) noexcept;
 
 private slots:
     void open() noexcept;
@@ -105,4 +105,5 @@ private:
     static qstr const MainWindowState;
     static qstr const LastUsedDirectory;
     static qstr const LastUsedFile;
+    static qstr const Error;
 };
