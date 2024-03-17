@@ -15,8 +15,7 @@ You need to download two libraries (if you don't have them yet):
 2. PCRE2 - to install on macOS, run the command`brew install pcre2`
 
 If someone does not have (or does not want to have) the PCRE2 library on their computer, they should modify the CMakeLists.txt file.<br> 
-In line 2 of this file, change ON to OFF. Currently it is _**set(PCRE2 ON)**_.<br> 
-Or comment out this line altogether.
+In line 2 of this file, change ON to OFF. Currently it is _**set(PCRE2 ON)**_. Or comment out this line.
 
 The program allows you to test several patterns with several source texts at the same time (every pattern with every source text).<br>
 Of course, we use this opportunity if it makes sense.<br>
