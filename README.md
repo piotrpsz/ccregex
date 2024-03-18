@@ -23,3 +23,6 @@ Of course, we use this opportunity if it makes sense.<br>
 Patterns and sources can be saved to a file on disk and read from them (see app menu).
 
 ![Screenshot.png](img%2FScreenshot.png)
+
+# What's new in version 0.1.0
+You can work with several documents at the same time.
