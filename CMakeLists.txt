@@ -31,13 +31,17 @@ set(APP_SOURCES
         Settings.h
         Editor.cpp
         Editor.h
-        Component.cc
-        Component.h
+        LabeledEditor.cc
+        LabeledEditor.h
         EventController.cc
         EventController.h
         Types.h
         Event.h
         Content.h
+        Workspace.cpp
+        Workspace.h
+        WorkingWindow.cpp
+        WorkingWindow.h
 )
 set(APP_LIBS
         Qt6::Core

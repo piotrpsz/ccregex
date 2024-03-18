@@ -26,10 +26,11 @@
 -------------------------------------------------------------------*/
 #include "Content.h"
 #include "Settings.h"
-#include "Component.h"
+#include "LabeledEditor.h"
 #include "MainWindow.h"
 #include "OptionsWidget.h"
 #include "EventController.h"
+#include "Workspace.h"
 #include <QMenu>
 #include <QMenuBar>
 #include <QSplitter>
@@ -47,7 +48,7 @@
 
 /*------- static constants::
 -------------------------------------------------------------------*/
-qstr const MainWindow::AppName = "cc-regex v. 0.0.1";
+qstr const MainWindow::AppName = "cc-regex v. 0.1.0";
 char const * const MainWindow::FileTopMenu = QT_TR_NOOP("File");
 char const * const MainWindow::HelpTopMenu = QT_TR_NOOP("Help");
 char const * const MainWindow::FileOpen = QT_TR_NOOP("Open File ...");
@@ -58,10 +59,9 @@ char const * const MainWindow::About = QT_TR_NOOP("About");
 char const * const MainWindow::NameFilter = QT_TR_NOOP("RegexPcre: (*.%1)");
 char const * const MainWindow::FileExt = QT_TR_NOOP("crgx");
 char const * const MainWindow::ReadError = QT_TR_NOOP("Something went wrong while reading the file.");
-char const * const MainWindow::NoContentToSave = QT_TR_NOOP("There is no content to save.");
-char const * const MainWindow::TryLater = QT_TR_NOOP("If you get something, try again.");
-char const * const MainWindow::FileAlreadyExist = QT_TR_NOOP("The file '%1' already exists.");
-char const * const MainWindow::WillOverwrite = QT_TR_NOOP("You want to overwrite it?");
+
+
+
 qstr const MainWindow::MainWindowSize = "MainWindow/Size";
 qstr const MainWindow::MainWindowPosition = "MainWindow/Position";
 qstr const MainWindow::MainWindowState = "MainWindow/State";
@@ -73,30 +73,27 @@ MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
     main_splitter_{new QSplitter(Qt::Horizontal)},
     windows_splitter_{new QSplitter{Qt::Vertical}},
-    replace_edit_{new Component("Replacement String")},
-    regex_edit_{new Component("Regular Expression")},
-    source_edit_{new Component("Source String")},
-    result_view_{new Component("Result", true)},
-    options_widget_{new OptionsWidget}
+    replace_edit_{new LabeledEditor("Replacement String")},
+    regex_edit_{new LabeledEditor("Regular Expression")},
+    source_edit_{new LabeledEditor("Source String")},
+    result_view_{new LabeledEditor("Matches", true)},
+    options_widget_{new OptionsWidget},
+    workspace_{new Workspace}
 {
+    auto p = palette();
+    p.setColor(QPalette::Window, QColor{60, 60, 60, 255});
+    setAutoFillBackground(true);
+    setPalette(p);
+    setContentsMargins(0, 0, 0, 0);
+
     setWindowTitle(AppName);
     create_menu();
 
-    windows_splitter_->setHandleWidth(1);
-    windows_splitter_->setChildrenCollapsible(false);
-    windows_splitter_->addWidget(regex_edit_);
-    windows_splitter_->addWidget(source_edit_);
-//    windows_splitter_->addWidget(replace_edit_);
-    windows_splitter_->addWidget(result_view_);
-
-    main_splitter_->setHandleWidth(1);
+    main_splitter_->setHandleWidth(0);
     main_splitter_->setChildrenCollapsible(false);
-    main_splitter_->addWidget(windows_splitter_);
+    main_splitter_->addWidget(workspace_);
     main_splitter_->addWidget(options_widget_);
-
     setCentralWidget(main_splitter_);
-
-    EventController::instance().append(this, event::RunRequest);
 }
 
 void MainWindow::create_menu() noexcept {
@@ -147,10 +144,6 @@ void MainWindow::showEvent(QShowEvent*) {
         move(data.value().toPoint());
     if (auto data = sts.read(MainWindowSize); data)
         restoreState(data.value().toByteArray());
-    if (auto data = sts.read(LastUsedDirectory); data)
-        last_used_dir_ = data.value().toString();
-    if (auto data = sts.read(LastUsedFile); data)
-        last_used_file_name_ = data.value().toString();
 }
 
 void MainWindow::closeEvent(QCloseEvent*) {
@@ -158,37 +151,11 @@ void MainWindow::closeEvent(QCloseEvent*) {
     sts.save(MainWindowState, saveState());
     sts.save(MainWindowPosition, pos());
     sts.save(MainWindowSize, size());
-    sts.save(LastUsedDirectory, last_used_dir_);
-    sts.save(LastUsedFile, last_used_file_name_);
-}
-
-// Reads data from a file.
-
-void MainWindow::customEvent(QEvent *event) {
-    result_view_->clear();
-    auto const e = dynamic_cast<Event*>(event);
-
-    switch (int(e->type())) {
-        case event::RunRequest: {
-            result_view_->clear();
-            using namespace std::chrono_literals;
-            std::this_thread::sleep_for(500ms);
-
-            auto tool = e->data()[0].toInt();
-            auto grammar = e->data()[1].toInt();
-            auto variations = e->data()[2].toString();
-
-            if (tool == tool::Std)
-                if (auto s = glz::read_json<std::vector<type::StdSyntaxOption>>(variations.toStdString()); s)
-                    std_regx(type::StdSyntaxOption(grammar), s.value());
-            break;
-        }
-
-    }
 }
 
 
 void MainWindow::std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept {
+    /*
     auto opt = grammar;
     for (auto it : vars)
         opt |= it;
@@ -221,116 +188,5 @@ void MainWindow::std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSy
             EventController::instance().send_event(event::AppendLine, "--- END ---");
         }
     }
-}
-
-std::vector<std::string> MainWindow::transform(qstr const& str) noexcept {
-    std::vector<std::string> buffer;
-    if (not str.isEmpty()) {
-        auto data = str.split('\n');
-        buffer.reserve(data.size());
-        for (auto const item: data) {
-            auto text = item.trimmed();
-            if (not text.isEmpty())
-                buffer.push_back(item.toStdString());
-        }
-    }
-    return std::move(buffer);
-}
-
-void MainWindow::open() noexcept {
-    clear();
-
-    QFileDialog dialog(this);
-    dialog.setOption(QFileDialog::DontUseNativeDialog);
-    dialog.setOption(QFileDialog::DontConfirmOverwrite);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setViewMode(QFileDialog::List);
-    dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    dialog.setNameFilter(tr(NameFilter).arg(FileExt));
-    dialog.setDefaultSuffix(FileExt);
-    dialog.selectFile(last_used_file_name_);
-    dialog.setDirectory(last_used_dir_);
-    if (dialog.exec()) {
-        auto path = dialog.selectedFiles().first();
-        // Remember file references for future use.
-        QFileInfo fi{path};
-        last_used_dir_ = fi.path();
-        last_used_file_name_ = fi.fileName();
-
-        // Read the content.
-        std::ifstream f(path.toStdString());
-        if (f.is_open()) {
-            f.seekg(0, std::ios_base::end);
-            auto size = f.tellg();
-            f.seekg(0, std::ios_base::beg);
-            std::string buffer;
-            buffer.resize(size);
-            f.read(buffer.data(), size);
-            if (f.fail() or f.gcount() not_eq size) {
-                std::cerr << tr(ReadError).toStdString() << '\n';
-                QMessageBox::critical(this, AppName, tr(ReadError));
-                return;
-            }
-            // Fetch strings from JSON (file content).
-            if (auto cnt = Content::from_json(buffer); cnt) {
-                auto data = cnt.value();
-                regex_edit_->set(data.regex);
-                source_edit_->set(data.source);
-                replace_edit_->set(data.replacement);
-                result_view_->set(data.result);
-            }
-        }
-    }
-}
-
-// Saves data to a file.
-void MainWindow::save() noexcept {
-    auto regex_content = transform(regex_edit_->content().trimmed());
-    auto source_content = transform(source_edit_->content().trimmed());
-    auto replace_content = transform(replace_edit_->content().trimmed());
-    auto result_content = transform(result_view_->content().trimmed());
-
-    Content cnt{regex_content, source_content, replace_content, result_content};
-    if (cnt.empty()) {
-        QMessageBox box;
-        box.setText(tr(NoContentToSave));
-        box.setInformativeText(tr(TryLater));
-        box.setStandardButtons(QMessageBox::Ok);
-        box.exec();
-        return;
-    }
-
-    QFileDialog dialog(this);
-    dialog.setOption(QFileDialog::DontUseNativeDialog);
-    dialog.setOption(QFileDialog::DontConfirmOverwrite);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setViewMode(QFileDialog::List);
-    dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setNameFilter(tr(NameFilter).arg(FileExt));
-    dialog.setDefaultSuffix(FileExt);
-    dialog.selectFile(last_used_file_name_);
-    dialog.setDirectory(last_used_dir_);
-    if (dialog.exec()) {
-        auto fi = QFileInfo(dialog.selectedFiles().first());
-        if (fi.exists()) {
-            QMessageBox box;
-            box.setText(QString(tr(FileAlreadyExist)).arg(fi.fileName()));
-            box.setInformativeText(tr(WillOverwrite));
-            box.setStandardButtons(QMessageBox::Save|QMessageBox::Cancel);
-            box.setDefaultButton(QMessageBox::Save);
-            if (auto answer = box.exec(); answer == QMessageBox::Cancel)
-                return;
-        }
-        last_used_dir_ = fi.path();
-        last_used_file_name_ = fi.fileName();
-        std::ofstream f(fi.absoluteFilePath().toStdString());
-        if (f.is_open()) {
-            auto str = cnt.to_json();
-            f.write(str.data(), int(str.size()));
-        }
-    }
-}
-
-void MainWindow::save_as() noexcept {
-    qInfo() << "save as slot";
+     */
 }

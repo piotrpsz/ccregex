@@ -20,39 +20,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 14/03/2024.
+// Created by Piotr Pszczółkowski on 18/03/2024.
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Types.h"
-#include "Editor.h"
-
-#include <QWidget>
+#include "Content.h"
+#include <QMdiArea>
+#include <QFileInfo>
+#include <vector>
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
-class Editor;
+class QEvent;
+class WorkingWindow;
 
 /*------- class:
 -------------------------------------------------------------------*/
-class Component : public QWidget {
+class Workspace : public QMdiArea {
+    Q_OBJECT
 public:
-    explicit Component(qstr const& title, bool read_only = false, QWidget* parent = nullptr);
-    ~Component() override = default;
-
-    [[nodiscard]] qstr content() const noexcept {
-        return editor_->content();
-    }
-    void set(std::vector<std::string> const& data) noexcept {
-        editor_->set(data);
-    }
-    void clear() const noexcept {
-        editor_->clear();
-    }
-    void active() const noexcept {
-        editor_->setFocus();
-    }
+    explicit Workspace(QWidget* = nullptr);
+    ~Workspace() override;
 private:
-    Editor* const editor_;
+    void customEvent(QEvent* event) override;
+    void open() noexcept;
+    void clear() noexcept;
+    void save() noexcept;
+    void save_as() noexcept;
+    void save(QFileInfo const& fi, Content content) noexcept;
+
+
+    WorkingWindow* current_mdiwidget() const noexcept;
+
+    qstr last_used_dir_{};
+    qstr last_used_file_name_{};
+    static char const * const NameFilter;
+    static char const * const FileExt;
+    static char const * const ReadError;
+    static char const * const NoContentToSave;
+    static char const * const TryLater;
+    static char const * const FileAlreadyExist;
+    static char const * const WillOverwrite;
+
+    static qstr const LastUsedDirectory;
+    static qstr const LastUsedFile;
+    static qstr const Error;
 };
