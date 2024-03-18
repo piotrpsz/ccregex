@@ -78,12 +78,7 @@ private slots:
 
 
 private:
-    QSplitter* const main_splitter_;
-    QSplitter* const windows_splitter_;
-    LabeledEditor* const replace_edit_;
-    LabeledEditor* const regex_edit_;
-    LabeledEditor* const source_edit_;
-    LabeledEditor* const result_view_;
+    QSplitter* const splitter_;
     OptionsWidget* const options_widget_;
     Workspace* const workspace_;
     bool first_show_{true};
@@ -96,9 +91,6 @@ private:
     static char const * const FileSaveAs;
     static char const * const Clear;
     static char const * const About;
-    static char const * const NameFilter;
-    static char const * const FileExt;
-    static char const * const ReadError;
     static qstr const MainWindowSize;
     static qstr const MainWindowPosition;
     static qstr const MainWindowState;

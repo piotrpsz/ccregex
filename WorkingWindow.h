@@ -65,6 +65,9 @@ public:
         source_edit_->clear();
         matches_view_->clear();
     }
+    void clear_matches() noexcept {
+        matches_view_->clear();
+    }
 
     /// Transform editor's content from one QString to vectors of std-strings.
     static strings transform(qstr const& str) noexcept;

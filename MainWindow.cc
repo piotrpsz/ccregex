@@ -24,27 +24,18 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include "Content.h"
 #include "Settings.h"
 #include "LabeledEditor.h"
 #include "MainWindow.h"
 #include "OptionsWidget.h"
-#include "EventController.h"
 #include "Workspace.h"
 #include <QMenu>
 #include <QMenuBar>
 #include <QSplitter>
 #include <QShortcut>
-#include <QFileInfo>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <regex>
-#include <fmt/core.h>
-#include <thread>
-#include <chrono>
 
 /*------- static constants::
 -------------------------------------------------------------------*/
@@ -56,27 +47,15 @@ char const * const MainWindow::FileSave = QT_TR_NOOP("Save File ...");
 char const * const MainWindow::FileSaveAs = QT_TR_NOOP("Save File As ...");
 char const * const MainWindow::Clear = QT_TR_NOOP("Clear");
 char const * const MainWindow::About = QT_TR_NOOP("About");
-char const * const MainWindow::NameFilter = QT_TR_NOOP("RegexPcre: (*.%1)");
-char const * const MainWindow::FileExt = QT_TR_NOOP("crgx");
-char const * const MainWindow::ReadError = QT_TR_NOOP("Something went wrong while reading the file.");
-
-
 
 qstr const MainWindow::MainWindowSize = "MainWindow/Size";
 qstr const MainWindow::MainWindowPosition = "MainWindow/Position";
 qstr const MainWindow::MainWindowState = "MainWindow/State";
-qstr const MainWindow::LastUsedDirectory = "LastUsed/Directory";
-qstr const MainWindow::LastUsedFile = "LastUsed/File";
-qstr const MainWindow::Error = "Error";
+
 
 MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
-    main_splitter_{new QSplitter(Qt::Horizontal)},
-    windows_splitter_{new QSplitter{Qt::Vertical}},
-    replace_edit_{new LabeledEditor("Replacement String")},
-    regex_edit_{new LabeledEditor("Regular Expression")},
-    source_edit_{new LabeledEditor("Source String")},
-    result_view_{new LabeledEditor("Matches", true)},
+    splitter_{new QSplitter(Qt::Horizontal)},
     options_widget_{new OptionsWidget},
     workspace_{new Workspace}
 {
@@ -89,11 +68,11 @@ MainWindow::MainWindow(QWidget* const parent) :
     setWindowTitle(AppName);
     create_menu();
 
-    main_splitter_->setHandleWidth(0);
-    main_splitter_->setChildrenCollapsible(false);
-    main_splitter_->addWidget(workspace_);
-    main_splitter_->addWidget(options_widget_);
-    setCentralWidget(main_splitter_);
+    splitter_->setHandleWidth(0);
+    splitter_->setChildrenCollapsible(false);
+    splitter_->addWidget(workspace_);
+    splitter_->addWidget(options_widget_);
+    setCentralWidget(splitter_);
 }
 
 void MainWindow::create_menu() noexcept {
@@ -134,8 +113,8 @@ void MainWindow::showEvent(QShowEvent*) {
 
     auto const s = size();
     int const w0 = static_cast<int>(75. * s.width() / 100.);
-    int const w1 = s.width() - w0 - main_splitter_->handleWidth();
-    main_splitter_->setSizes({w0, w1});
+    int const w1 = s.width() - w0 - splitter_->handleWidth();
+    splitter_->setSizes({w0, w1});
 
     Settings sts;
     if (auto data = sts.read(MainWindowSize); data)

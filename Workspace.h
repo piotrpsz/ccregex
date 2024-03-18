@@ -45,14 +45,13 @@ public:
     ~Workspace() override;
 private:
     void customEvent(QEvent* event) override;
+    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) noexcept;
     void open() noexcept;
     void clear() noexcept;
     void save() noexcept;
     void save_as() noexcept;
-    void save(QFileInfo const& fi, Content content) noexcept;
-
-
-    WorkingWindow* current_mdiwidget() const noexcept;
+    void save(QFileInfo const& fi, const Content& content) noexcept;
+    [[nodiscard]] WorkingWindow* current_mdiwidget() const noexcept;
 
     qstr last_used_dir_{};
     qstr last_used_file_name_{};

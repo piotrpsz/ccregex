@@ -32,7 +32,10 @@
 #include <QMessageBox>
 #include <QMdiSubWindow>
 #include <fstream>
+#include <chrono>
+#include <thread>
 #include <fmt/core.h>
+#include <glaze/glaze.hpp>
 
 /*------- local constants:
 -------------------------------------------------------------------*/
@@ -43,9 +46,9 @@ char const * const Workspace::NoContentToSave = QT_TR_NOOP("There is no content 
 char const * const Workspace::TryLater = QT_TR_NOOP("If you get something, try again.");
 char const * const Workspace::FileAlreadyExist = QT_TR_NOOP("The file '%1' already exists.");
 char const * const Workspace::WillOverwrite = QT_TR_NOOP("You want to overwrite it?");
-
 qstr const Workspace::LastUsedDirectory = "LastUsed/Directory";
 qstr const Workspace::LastUsedFile = "LastUsed/File";
+qstr const Workspace::Error = "Error";
 
 Workspace::Workspace(QWidget *const parent) : QMdiArea(parent) {
     setViewMode(QMdiArea::TabbedView);
@@ -84,9 +87,19 @@ void Workspace::customEvent(QEvent *event) {
     auto const type = static_cast<int>(e->type());
 
     switch (type) {
-        case event::RunRequest:
+        case event::RunRequest: {
+            current_mdiwidget()->clear_matches();
+
+            auto const data = e->data();
+            auto tool = data[0].toInt();
+            auto grammar = data[1].toInt();
+            auto variations = data[2].toString();
+            if (tool == tool::Std)
+                if (auto s = glz::read_json<std::vector<type::StdSyntaxOption>>(variations.toStdString()); s)
+                    run_std(type::StdSyntaxOption(grammar), s.value());
             e->accept();
             break;
+        }
         case event::OpenFile:
             open();
             e->accept();
@@ -112,6 +125,43 @@ void Workspace::customEvent(QEvent *event) {
 void Workspace::clear() noexcept {
     if (auto it = current_mdiwidget(); it)
         it->clear();
+}
+
+void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) noexcept {
+    auto opt = grammar;
+    for (auto it : vars)
+        opt |= it;
+
+    auto const it = current_mdiwidget();
+    auto const content = it->content();
+    auto pattern_lines = content.regex;
+    auto source_lines = content.source;
+    if (pattern_lines.empty() or source_lines.empty())
+        return;
+
+    for (auto const& pattern : pattern_lines) {
+        for (auto const& source : source_lines) {
+            try {
+                std::regex rgx(pattern, opt);
+                auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
+                auto match_end_it = std::sregex_iterator();
+                for (auto it = match_begin_it; it != match_end_it; ++it) {
+                    std::smatch match = *it;
+                    EventController::instance().send_event(event::AppendLine, "--------------------------");
+                    for (int i = 0; i < match.size(); ++i) {
+                        auto const str{fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i))};
+                        EventController::instance().send_event(event::AppendLine, qstr::fromStdString(str));
+                    }
+                }
+            }
+            catch (std::regex_error const& e) {
+                auto msg = qstr::fromStdString(e.what());
+                QMessageBox::critical((QWidget *) this, Error, msg);
+                return;
+            }
+            EventController::instance().send_event(event::AppendLine, "--- END ---");
+        }
+    }
 }
 
 void Workspace::save() noexcept {
@@ -176,7 +226,7 @@ void Workspace::save_as() noexcept {
     }
 }
 
-void Workspace::save(QFileInfo const& fi, Content content) noexcept {
+void Workspace::save(QFileInfo const& fi, const Content& content) noexcept {
     last_used_dir_ = fi.absolutePath();
     last_used_file_name_ = fi.fileName();
 
