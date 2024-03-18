@@ -51,4 +51,6 @@ public:
                 return std::move(data);
         return {};
     }
+
+    static inline qstr const AppName = "cc-regex v. 0.1.0";
 };

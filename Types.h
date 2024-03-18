@@ -30,16 +30,18 @@
 #include <QSet>
 #include <QList>
 #include <regex>
+#include <vector>
+#include <string>
 
-namespace type {
-    using StdSyntaxOption = std::regex_constants::syntax_option_type;
-}
+
 namespace tool {
     enum {
         Std = 0,
         Pcre2,
         Qt
     };
+
+
 }
 
 /*------- types:
@@ -52,6 +54,7 @@ using u64 = quint64;
 using isize = qsizetype;
 using qstr = QString;
 using qvar = QVariant;
+using strings = std::vector<std::string>;
 
 
 /*------- template types:
@@ -64,3 +67,9 @@ template<typename K, typename V>
     using qhash = QHash<K,V>;
 template<typename T>
     using qlist = QList<T>;
+
+namespace type {
+    using StdSyntaxOption = std::regex_constants::syntax_option_type;
+    static inline qstr const EmptyString{};
+    static inline qstr const NoName{"noname"};
+}

@@ -35,17 +35,15 @@
 /*------- struct:
 -------------------------------------------------------------------*/
 struct Content {
-    std::vector<std::string> regex{};
-    std::vector<std::string> source{};
-    std::vector<std::string> replacement{};
-    std::vector<std::string> result{};
+    strings source{};
+    strings regex{};
+    strings matches{};
 
     Content() = default;
-    Content(auto regex_, auto source_, auto replacement_, auto result_) :
+    Content(auto regex_, auto source_, auto matches_) :
         regex{std::move(regex_)},
         source{std::move(source_)},
-        replacement{std::move(replacement_)},
-        result{std::move(result_)}
+        matches{std::move(matches_)}
     {}
     ~Content() = default;
     Content(Content const&) = default;
@@ -53,8 +51,8 @@ struct Content {
     Content& operator=(Content const&) = default;
     Content& operator=(Content&&) = default;
 
-    [[nodiscard]] bool empty() const noexcept {
-        return regex.empty() and source.empty() and replacement.empty() and result.empty();
+    bool empty() const noexcept {
+        return source.empty() and regex.empty() and matches.empty();
     }
 
     [[nodiscard]] std::string to_json(bool const pretty = false) const noexcept {
@@ -80,11 +78,8 @@ struct Content {
         s << "-- Source:\n";
         for (auto const& str : r.source)
             s << '\t' << str << '\n';
-//        s << "-- Replacement:\n";
-//        for (auto const& str : r.replacement)
-//            s << '\t' << str << '\n';
         s << "-- Result:\n";
-        for (auto const& str : r.result)
+        for (auto const& str : r.matches)
             s << '\t' << str << '\n';
 
         return s;
@@ -98,7 +93,6 @@ struct glz::meta<Content> {
     static constexpr auto value = object(
             "regex", &Content::regex,
             "source", &Content::source,
-//            "replacement", &Content::replacement,
-            "result", &Content::result
+            "result", &Content::matches
             );
 };

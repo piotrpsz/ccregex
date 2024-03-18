@@ -21,38 +21,45 @@
 // SOFTWARE.
 //
 // Created by Piotr Pszczółkowski on 14/03/2024.
-#pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include "Types.h"
 #include "Editor.h"
+#include "LabeledEditor.h"
+#include "EventController.h"
+#include <QLabel>
+#include <QBoxLayout>
 
-#include <QWidget>
+LabeledEditor::LabeledEditor(QString const& title, bool const read_only, QWidget *parent) :
+        QWidget(parent),
+        editor_{new Editor}
+{
+    if (read_only) {
+        editor_->setReadOnly(true);
+        EventController::instance().append(editor_, event::AppendLine);
+    }
 
-/*------- forward declarations:
--------------------------------------------------------------------*/
-class Editor;
+    auto p = palette();
+    p.setColor(QPalette::Base, QColor{60, 60, 60, 255});
+    setAutoFillBackground(true);
+    setPalette(p);
 
-/*------- class:
--------------------------------------------------------------------*/
-class Component : public QWidget {
-public:
-    explicit Component(qstr const& title, bool read_only = false, QWidget* parent = nullptr);
-    ~Component() override = default;
+    auto description{new QLabel{title}};
+    auto font = description->font();
+    font.setPointSize(11);
+    description->setFont(font);
 
-    [[nodiscard]] qstr content() const noexcept {
-        return editor_->content();
-    }
-    void set(std::vector<std::string> const& data) noexcept {
-        editor_->set(data);
-    }
-    void clear() const noexcept {
-        editor_->clear();
-    }
-    void active() const noexcept {
-        editor_->setFocus();
-    }
-private:
-    Editor* const editor_;
-};
+    auto header_layout{new QHBoxLayout};
+    header_layout->setContentsMargins(4, 4, 2, 4);
+    header_layout->setSpacing(0);
+    header_layout->addWidget(description);
+    header_layout->addStretch();
+
+    auto main_layout{new QVBoxLayout};
+    main_layout->setSpacing(0);
+    main_layout->setContentsMargins(0, 0, 0, 0);
+    main_layout->addLayout(header_layout);
+    main_layout->addWidget(editor_);
+
+    setLayout(main_layout);
+}

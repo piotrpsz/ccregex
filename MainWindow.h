@@ -25,13 +25,15 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Types.h"
-#include "Component.h"
+#include "LabeledEditor.h"
+#include "EventController.h"
 #include <QMainWindow>
 #include <QMessageBox>
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
-class Component;
+class Workspace;
+class LabeledEditor;
 class QSplitter;
 class QShowEvent;
 class QCloseEvent;
@@ -48,14 +50,22 @@ public:
     void create_menu() noexcept;
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
-    void customEvent(QEvent* event) override;
     void std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept;
     [[nodiscard]] static std::vector<std::string> transform(qstr const& str) noexcept;
 
 private slots:
-    void open() noexcept;
-    void save() noexcept;
-    void save_as() noexcept;
+    static void open() noexcept {
+        EventController::instance().send_event(event::OpenFile);
+    };
+    static void clear() noexcept {
+        EventController::instance().send_event(event::Clear);
+    }
+    void save() noexcept {
+        EventController::instance().send_event(event::SaveFile);
+    }
+    void save_as() noexcept {
+        EventController::instance().send_event(event::SaveAsFile);
+    }
 
     void about() noexcept {
         QMessageBox::about(this, "About",
@@ -65,25 +75,13 @@ private slots:
         );
     }
 
-    void clear() const noexcept {
-        regex_edit_->clear();
-        source_edit_->clear();
-        replace_edit_->clear();
-        result_view_->clear();
-        regex_edit_->active();
-    }
+
 
 private:
-    QSplitter* const main_splitter_;
-    QSplitter* const windows_splitter_;
-    Component* const replace_edit_;
-    Component* const regex_edit_;
-    Component* const source_edit_;
-    Component* const result_view_;
+    QSplitter* const splitter_;
     OptionsWidget* const options_widget_;
+    Workspace* const workspace_;
     bool first_show_{true};
-    qstr last_used_dir_{};
-    qstr last_used_file_name_{};
 
     static qstr const AppName;
     static char const * const FileTopMenu;
@@ -93,13 +91,6 @@ private:
     static char const * const FileSaveAs;
     static char const * const Clear;
     static char const * const About;
-    static char const * const NameFilter;
-    static char const * const FileExt;
-    static char const * const ReadError;
-    static char const * const NoContentToSave;
-    static char const * const TryLater;
-    static char const * const FileAlreadyExist;
-    static char const * const WillOverwrite;
     static qstr const MainWindowSize;
     static qstr const MainWindowPosition;
     static qstr const MainWindowState;

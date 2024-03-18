@@ -67,6 +67,9 @@ void Editor::customEvent(QEvent *event) {
 }
 
 void Editor::set(vector<string> const& data) noexcept {
+    clear();
+    QString plain_text{};
     for (auto const& text : data )
-        append(QString::fromStdString(text));
+        plain_text = plain_text.append(qstr::fromStdString(text)).append('\n');
+    insertPlainText(plain_text);
 }

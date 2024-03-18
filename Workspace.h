@@ -20,42 +20,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 15/03/2024.
+// Created by Piotr Pszczółkowski on 18/03/2024.
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include <QEvent>
 #include "Types.h"
+#include "Content.h"
+#include <QMdiArea>
+#include <QFileInfo>
+#include <vector>
+
+/*------- forward declarations:
+-------------------------------------------------------------------*/
+class QEvent;
+class WorkingWindow;
 
 /*------- class:
 -------------------------------------------------------------------*/
-class Event : public QEvent {
-    qvec<qvar> data_;
+class Workspace : public QMdiArea {
+    Q_OBJECT
 public:
-    template<typename... T>
-    explicit Event(int const id, T... args) : QEvent(static_cast<QEvent::Type>(id)) {
-        (..., data_.push_back(args));
-    }
-    qvec<qvar> data() && {
-        return std::move(data_);
-    }
-    qvec<qvar> const& data() const& {
-        return data_;
-    }
-};
+    explicit Workspace(QWidget* = nullptr);
+    ~Workspace() override;
+private:
+    void customEvent(QEvent* event) override;
+    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) noexcept;
+    void open() noexcept;
+    void clear() noexcept;
+    void save() noexcept;
+    void save_as() noexcept;
+    void save(QFileInfo const& fi, const Content& content) noexcept;
+    [[nodiscard]] WorkingWindow* current_mdiwidget() const noexcept;
 
-/*------- user's events:
--------------------------------------------------------------------*/
-namespace event {
-    enum {
-        Dummy = (QEvent::User + 1),
-        OpenFile,
-        SaveFile,
-        SaveAsFile,
-        RunRequest,
-        BreakRequest,
-        AppendLine,
-        Clear,
-   };
-}
+    qstr last_used_dir_{};
+    qstr last_used_file_name_{};
+    static char const * const NameFilter;
+    static char const * const FileExt;
+    static char const * const ReadError;
+    static char const * const NoContentToSave;
+    static char const * const TryLater;
+    static char const * const FileAlreadyExist;
+    static char const * const WillOverwrite;
+
+    static qstr const LastUsedDirectory;
+    static qstr const LastUsedFile;
+    static qstr const Error;
+};
