@@ -10,7 +10,8 @@ In the near future you will be able to test regular expressions with engines:
 
 The program itself uses the Qt 6.x library as a GUI.<br>
 I created a program on macOS using CMake.<br>
-You need to download three libraries (if you don't have them yet):
+
+### You need to download three libraries (if you don't have them yet):
 1. Qt - to install on macOS, run the command `brew install qt6`
 2. PCRE2 - to install on macOS, run the command `brew install pcre2`
 3. fmt - to install on macOS, run the command `brew install fmt`
