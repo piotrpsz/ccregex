@@ -30,7 +30,7 @@ Patterns and sources can be saved to a file on disk and read from them (see app 
 5. `cd build`
 6. `cmake ..`
 7. `cmake --build .`
-8. (if you would like to build from beginning: `cmake --fresh .`)
+8. (if you would like to build from beginning, remove previous content: `cmake --fresh .` and go to point 7.)
 9. `./ccregex` (run)
 
 
