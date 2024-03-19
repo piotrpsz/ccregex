@@ -18,11 +18,26 @@ You need to download three libraries (if you don't have them yet):
 If someone does not have (or does not want to have) the PCRE2 library on their computer, they should modify the CMakeLists.txt file.<br> 
 In line 2 of this file, change ON to OFF. Currently it is _**set(PCRE2 ON)**_. Or comment out this line.
 
-The program allows you to test several patterns with several source texts at the same time (every pattern with every source text).
+The program allows you to test several patterns with several source texts at the same time (every pattern with every source text).<br>
 Of course, we use this opportunity if it makes sense.<br>
 Patterns and sources can be saved to a file on disk and read from them (see app menu).
 
+### How to build the program
+1. open a terminal and navigate to the directory of your choice
+2. clone the program from github
+3. go to ccregex directory,
+4. `mkdir build`
+5. `cd build`
+6. `cmake ..`
+7. `cmake --build .`
+8. (if you would like to build from beginning: `cmake --fresh .`)
+9. `./ccregex` (run)
+
+
 ![Screenshot.png](img%2FScreenshot.png)
 
-# What's new in version 0.1.0
-You can work with several documents at the same time.
+### Versions 
+<lu>
+    <li>0.0.1 - initial working version</li>
+    <li>0.1.0 - it is possible to work with several documents at the same time</li>
+</lu>

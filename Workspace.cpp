@@ -151,7 +151,7 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
                 for (auto it = match_begin_it; it != match_end_it; ++it) {
                     std::smatch match = *it;
                     EventController::instance().send_event(event::AppendLine, "--------------------------");
-                    for (int i = 0; i < match.size(); ++i) {
+                    for (uint i = 0; i < match.size(); ++i) {
                         auto const str{fmt::format("${}: '{}' ({}, {})", i, match.str(i), match.position(i), match.length(i))};
                         EventController::instance().send_event(event::AppendLine, qstr::fromStdString(str));
                     }
@@ -237,6 +237,7 @@ void Workspace::save(QFileInfo const& fi, const Content& content) noexcept {
     if (f.is_open()) {
         auto str = content.to_json();
         f.write(str.data(), int(str.size()));
+
     }
 }
 

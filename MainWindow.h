@@ -39,7 +39,7 @@ class QShowEvent;
 class QCloseEvent;
 class OptionsWidget;
 
-/*------- class:
+/*------- class declaration:
 -------------------------------------------------------------------*/
 class MainWindow : public QMainWindow{
     Q_OBJECT
@@ -58,19 +58,21 @@ private slots:
     static void clear() noexcept {
         EventController::instance().send_event(event::ClearAll);
     }
-    void save() noexcept {
+    static void save() noexcept {
         EventController::instance().send_event(event::SaveFile);
     }
-    void save_as() noexcept {
+    static void save_as() noexcept {
         EventController::instance().send_event(event::SaveAsFile);
     }
-
     void about() noexcept {
         QMessageBox::about(this, "About",
                            "cc-regex is a regular expression testing program.\n"
                            "The program uses tools available for C++ programmers.\n\n"
                            "Author: Piotr Pszczółkowski (piotr@beesoft.pl)."
         );
+    }
+    void about_qt() noexcept {
+        QMessageBox::aboutQt(this);
     }
 
 private:
@@ -86,6 +88,7 @@ private:
     static char const * const FileSaveAs;
     static char const * const Clear;
     static char const * const About;
+    static char const * const AboutQt;
     static qstr const MainWindowSize;
     static qstr const MainWindowPosition;
     static qstr const MainWindowState;

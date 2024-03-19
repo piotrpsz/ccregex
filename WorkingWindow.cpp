@@ -94,5 +94,5 @@ std::vector<std::string> WorkingWindow::transform(qstr const& str) noexcept {
                 buffer.push_back(item.toStdString());
         }
     }
-    return std::move(buffer);
+    return buffer;
 }

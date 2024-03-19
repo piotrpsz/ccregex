@@ -41,8 +41,8 @@ struct Content {
 
     Content() = default;
     Content(auto regex_, auto source_, auto matches_) :
-        regex{std::move(regex_)},
         source{std::move(source_)},
+        regex{std::move(regex_)},
         matches{std::move(matches_)}
     {}
     ~Content() = default;

@@ -34,7 +34,7 @@
 #include <QShortcut>
 #include <string>
 
-/*------- static constants::
+/*------- static constants:
 -------------------------------------------------------------------*/
 char const * const MainWindow::FileTopMenu = QT_TR_NOOP("File");
 char const * const MainWindow::HelpTopMenu = QT_TR_NOOP("Help");
@@ -43,11 +43,13 @@ char const * const MainWindow::FileSave = QT_TR_NOOP("Save File ...");
 char const * const MainWindow::FileSaveAs = QT_TR_NOOP("Save File As ...");
 char const * const MainWindow::Clear = QT_TR_NOOP("Clear");
 char const * const MainWindow::About = QT_TR_NOOP("About");
+char const * const MainWindow::AboutQt = QT_TR_NOOP("About Qt");
 qstr const MainWindow::MainWindowSize = "MainWindow/Size";
 qstr const MainWindow::MainWindowPosition = "MainWindow/Position";
 qstr const MainWindow::MainWindowState = "MainWindow/State";
 
-
+/*------- class implementation:
+-------------------------------------------------------------------*/
 MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
     splitter_{new QSplitter(Qt::Horizontal)},
@@ -55,10 +57,10 @@ MainWindow::MainWindow(QWidget* const parent) :
     workspace_{new Workspace}
 {
     auto p = palette();
-    p.setColor(QPalette::Window, QColor{60, 60, 60, 255});
+    p.setColor(QPalette::Window, Settings::BackgroundColor);
     setAutoFillBackground(true);
     setPalette(p);
-    setContentsMargins(0, 0, 0, 0);
+    setContentsMargins(Settings::NoMargins);
 
     setWindowTitle(Settings::AppName);
     create_menu();
@@ -72,33 +74,37 @@ MainWindow::MainWindow(QWidget* const parent) :
 
 void MainWindow::create_menu() noexcept {
     auto const file = new QMenu{tr(FileTopMenu)};
-    auto const open = new QAction{tr(FileOpen)};
-    auto const save = new QAction{tr(FileSave)};
-    auto const save_as = new QAction{tr(FileSaveAs)};
-    auto const clear = new QAction{tr(Clear)};
+    {
+        auto const open = new QAction{tr(FileOpen)};
+        open->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+        connect(open, &QAction::triggered, this, &MainWindow::open);
+        file->addAction(open);
+        auto const save = new QAction{tr(FileSave)};
+        save->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+        connect(save, &QAction::triggered, this, &MainWindow::save);
+        file->addAction(save);
+        auto const save_as = new QAction{tr(FileSaveAs)};
+        connect(save_as, &QAction::triggered, this, &MainWindow::save_as);
+        file->addAction(save_as);
 
-    open->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
-    save->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
-    clear->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
+        file->addSeparator();
 
-    connect(open, &QAction::triggered, this, &MainWindow::open);
-    connect(save, &QAction::triggered, this, &MainWindow::save);
-    connect(save_as, &QAction::triggered, this, &MainWindow::save_as);
-    connect(clear, &QAction::triggered, this, &MainWindow::clear);
-
-    file->addAction(open);
-    file->addAction(save);
-    file->addAction(save_as);
-    file->addSeparator();
-    file->addAction(clear);
+        auto const clear = new QAction{tr(Clear)};
+        clear->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
+        connect(clear, &QAction::triggered, this, &MainWindow::clear);
+        file->addAction(clear);
+    }
     menuBar()->addMenu(file);
-
     //-------------------------------------
-
     auto const help = new QMenu{tr(HelpTopMenu)};
-    auto const about = new QAction{tr(About)};
-    connect(about, &QAction::triggered, this, &MainWindow::about);
-    help->addAction(about);
+    {
+        auto const about = new QAction{tr(About)};
+        connect(about, &QAction::triggered, this, &MainWindow::about);
+        help->addAction(about);
+        auto const about_qt = new QAction(tr(AboutQt));
+        connect(about_qt, &QAction::triggered, this, &MainWindow::about_qt);
+        help->addAction(about_qt);
+    }
     menuBar()->addMenu(help);
 }
 
