@@ -19,7 +19,7 @@ I created a program on macOS using CMake.<br>
 If someone does not have (or does not want to have) the PCRE2 library on their computer, they should modify the CMakeLists.txt file.<br> 
 In line 2 of this file, change ON to OFF. Currently it is `set(PCRE2 ON)`. Or comment out this line.
 
-The program allows you to test several patterns with several source texts at the same time (every pattern with every source text).<br>
+The program allows you to test several patterns with several source texts at the same time (every pattern with every source text).
 Of course, we use this opportunity if it makes sense.<br>
 Patterns and sources can be saved to a file on disk and read from them (see app menu).
 
