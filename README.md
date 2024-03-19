@@ -26,7 +26,7 @@ Patterns and sources can be saved to a file on disk and read from them (see app 
 ### How to build the program
 1. open a terminal and navigate to the directory of your choice
 2. clone the program from github
-3. go to ccregex directory,
+3. `cd ccregex` go to ccregex directory,
 4. `mkdir build`
 5. `cd build`
 6. `cmake ..`
