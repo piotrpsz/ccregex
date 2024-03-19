@@ -56,6 +56,7 @@ namespace event {
         RunRequest,
         BreakRequest,
         AppendLine,
-        Clear,
+        ClearAll,
+        ClearMatches
    };
 }

@@ -44,12 +44,31 @@ public:
     explicit Workspace(QWidget* = nullptr);
     ~Workspace() override;
 private:
+    /// Handle user events
+    /// \param event - event to handle (firstly cast to user Event).
     void customEvent(QEvent* event) override;
-    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) noexcept;
+
+    /// Execute regex process for std.
+    /// \param grammar - information about used grammar,
+    /// \param variations - other user requirements
+    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> variations) noexcept;
+
+    /// Open and read file from disk. \n
+    /// Content for current mdi-subwindow.
     void open() noexcept;
-    void clear() noexcept;
+
+    /// Save content of current mdi-subwindow to the file on disk. \n
+    /// If file already exists will overwrite. \n
+    /// If 'noname' call save_as.
     void save() noexcept;
+
+    /// Save content of current mdi-subwindow to file on disk. \n
+    /// The user must provide a new file name.
     void save_as() noexcept;
+
+    /// Write content to the file (overwrite if exists).
+    /// \param fi - information about the file (path)
+    /// \param content - content to save.
     void save(QFileInfo const& fi, const Content& content) noexcept;
     [[nodiscard]] WorkingWindow* current_mdiwidget() const noexcept;
 
@@ -62,7 +81,6 @@ private:
     static char const * const TryLater;
     static char const * const FileAlreadyExist;
     static char const * const WillOverwrite;
-
     static qstr const LastUsedDirectory;
     static qstr const LastUsedFile;
     static qstr const Error;

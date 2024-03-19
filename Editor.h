@@ -46,5 +46,6 @@ public:
     [[nodiscard]] qstr content() const& {
         return toPlainText();
     }
+
     void set(std::vector<std::string> const& data) noexcept;
 };

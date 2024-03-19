@@ -22,6 +22,7 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
+#include "Settings.h"
 #include "WorkingWindow.h"
 #include "LabeledEditor.h"
 #include <QSplitter>
@@ -29,6 +30,8 @@
 #include <QFileInfo>
 #include <utility>
 
+/*------- class implementation:
+-------------------------------------------------------------------*/
 WorkingWindow::WorkingWindow(qstr path, qstr name, QWidget *const parent) :
         QWidget(parent),
         splitter_{new QSplitter{Qt::Vertical}},
@@ -39,7 +42,7 @@ WorkingWindow::WorkingWindow(qstr path, qstr name, QWidget *const parent) :
         name_{std::move(name)}
 {
     auto p = palette();
-    p.setColor(QPalette::Window, QColor{35, 35, 35});
+    p.setColor(QPalette::Base, Settings::BackgroundColor);
     setAutoFillBackground(true);
     setPalette(p);
 
@@ -47,14 +50,14 @@ WorkingWindow::WorkingWindow(qstr path, qstr name, QWidget *const parent) :
     splitter_->addWidget(source_edit_);
     splitter_->addWidget(regex_edit_);
     splitter_->addWidget(matches_view_);
-    splitter_->setHandleWidth(0);
-    splitter_->setContentsMargins(0, 0, 0, 0);
+    splitter_->setHandleWidth(Settings::NoHandle);
+    splitter_->setContentsMargins(Settings::NoMargins);
     splitter_->setPalette(p);
     splitter_->setAutoFillBackground(true);
 
     auto box = new QHBoxLayout;
-    box->setSpacing(0);
-    box->setContentsMargins(0, 0, 0, 0);
+    box->setSpacing(Settings::NoSpacing);
+    box->setContentsMargins(Settings::NoMargins);
     box->addWidget(splitter_);
     setLayout(box);
 

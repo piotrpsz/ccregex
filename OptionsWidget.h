@@ -25,6 +25,7 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
+#include "EventController.h"
 #include <QWidget>
 
 /*------- forward declarations:
@@ -33,7 +34,7 @@ class QCheckBox;
 class QPushButton;
 class QRadioButton;
 
-/*------- class:
+/*------- class declaration:
 -------------------------------------------------------------------*/
 class OptionsWidget : public QWidget {
     Q_OBJECT
@@ -43,7 +44,12 @@ public:
 
 private slots:
     void run_slot() noexcept;
-    void break_slot() noexcept;
+    static void claer_all() noexcept {
+        EventController::instance().send_event(event::ClearAll);
+    }
+    static void claer_matches() noexcept {
+        EventController::instance().send_event(event::ClearMatches);
+    }
 
 private:
     QRadioButton* const std_;
@@ -60,8 +66,29 @@ private:
     QCheckBox* const optimize_;
     QCheckBox* const collate_;
     QCheckBox* const multiline_;
-    QPushButton* const run_;
-    QPushButton* const break_;
-    QPushButton* const exit_;
-};
 
+    QPushButton* const run_;
+    QPushButton* const clear_all_;
+    QPushButton* const clear_matches_;
+    QPushButton* const exit_;
+
+    static char const * const StdRegex;
+    static char const * const QtRegex;
+    static char const * const PcreRegex;
+    static char const * const EcmaScript;
+    static char const * const BasicPosix;
+    static char const * const ExtendedPosix;
+    static char const * const AwkPosix;
+    static char const * const GrepPosix;
+    static char const * const GrepPosixE;
+    static char const * const IgnoreCase;
+    static char const * const NoSubs;
+    static char const * const Optimize;
+    static char const * const Collate;
+    static char const * const Multiline;
+
+    static char const * const Run;
+    static char const * const ClearAll;
+    static char const * const ClearMatches;
+    static char const * const Exit;
+};

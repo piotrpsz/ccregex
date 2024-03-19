@@ -36,33 +36,56 @@
 #include <iostream>
 #include <glaze/glaze.hpp>
 
+/*------- local constants:
+-------------------------------------------------------------------*/
+char const * const OptionsWidget::StdRegex = QT_TR_NOOP("std::regex [standard since C++11]");
+char const * const OptionsWidget::QtRegex = QT_TR_NOOP("Qt::QRegularExpression [Qt]");
+char const * const OptionsWidget::PcreRegex = QT_TR_NOOP("pcre2 [library using Perl5 syntax and semantic]");
+char const * const OptionsWidget::EcmaScript = QT_TR_NOOP("ECMA script grammar [default]");
+char const * const OptionsWidget::BasicPosix = QT_TR_NOOP("basic POSIX grammar");
+char const * const OptionsWidget::ExtendedPosix = QT_TR_NOOP("extended POSIX grammar");
+char const * const OptionsWidget::AwkPosix = QT_TR_NOOP("awk utility in POSIX grammar");
+char const * const OptionsWidget::GrepPosix = QT_TR_NOOP("grep utility in POSIX grammar");
+char const * const OptionsWidget::GrepPosixE = QT_TR_NOOP("grep with -E in POSIX grammar");
+char const * const OptionsWidget::IgnoreCase = QT_TR_NOOP("icase [ignore case]");
+char const * const OptionsWidget::NoSubs = QT_TR_NOOP("nosubs [marked sub-expressions as normal]");
+char const * const OptionsWidget::Optimize = QT_TR_NOOP("optimize [slower construction, faster matching]");
+char const * const OptionsWidget::Collate = QT_TR_NOOP("collate [locale sensitive]");
+char const * const OptionsWidget::Multiline = QT_TR_NOOP("multiline");
 
+char const * const OptionsWidget::Run = QT_TR_NOOP("Run");
+char const * const OptionsWidget::ClearAll = QT_TR_NOOP("Clear");
+char const * const OptionsWidget::ClearMatches = QT_TR_NOOP("Clear Matches");
+char const * const OptionsWidget::Exit = QT_TR_NOOP("Exit");
+
+/*------- class implementation:
+-------------------------------------------------------------------*/
 OptionsWidget::OptionsWidget(QWidget* const parent) :
     QWidget(parent),
-    std_{new QRadioButton{"std::regex [standard since C++11]"}},
-    qt_{new QRadioButton{"QRegularExpression [Qt]"}},
-    pcre2_{new QRadioButton{"pcre2 [library using Perl5 syntax and semantic]"}},
-    ecma_{ new QRadioButton{"ECMA script grammar [default]"}},
-    basic_{new QRadioButton{"basic POSIX grammar"}},
-    extended_{new QRadioButton{"extended POSIX grammar"}},
-    awk_{new QRadioButton{"AWK utility in POSIX grammar"}},
-    grep_{new QRadioButton{"GREP utility in POSIX grammar"}},
-    egrep_{new QRadioButton{"GREP with -E option in POSIX grammar"}},
-    icace_{new QCheckBox{"icase [matching without regard to case]"}},
-    nosubs_{new QCheckBox{"nosubs [specific support for sub-expressions]"}},
-    optimize_{new QCheckBox{"optimize [faster matching, slower construction]"}},
-    collate_{new QCheckBox{"collate [locale sensitive]"}},
-    multiline_{new QCheckBox{"multiline"}},
-    run_{new QPushButton{"Run"}},
-    break_{new QPushButton{"Break"}},
-    exit_{new QPushButton{"Exit"}}
+    std_{new QRadioButton{tr(StdRegex)}},
+    qt_{new QRadioButton{tr(QtRegex)}},
+    pcre2_{new QRadioButton{tr(PcreRegex)}},
+    ecma_{ new QRadioButton{tr(EcmaScript)}},
+    basic_{new QRadioButton{tr(BasicPosix)}},
+    extended_{new QRadioButton{tr(ExtendedPosix)}},
+    awk_{new QRadioButton{tr(AwkPosix)}},
+    grep_{new QRadioButton{tr(GrepPosix)}},
+    egrep_{new QRadioButton{tr(GrepPosixE)}},
+    icace_{new QCheckBox{tr(IgnoreCase)}},
+    nosubs_{new QCheckBox{tr(NoSubs)}},
+    optimize_{new QCheckBox{tr(Optimize)}},
+    collate_{new QCheckBox{tr(Collate)}},
+    multiline_{new QCheckBox{tr(Multiline)}},
+    run_{new QPushButton{tr(Run)}},
+    clear_all_{new QPushButton{tr(ClearAll)}},
+    clear_matches_{new QPushButton{tr(ClearMatches)}},
+    exit_{new QPushButton{tr(Exit)}}
 {
     std_->setChecked(true);
     ecma_->setChecked(true);
     // actually implemented only std version
     qt_->setEnabled(false);
     pcre2_->setEnabled(false);
-
 
     auto standard_group{new QGroupBox{"Tool"}};
     auto standard_layout{new QVBoxLayout};
@@ -94,8 +117,12 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
 
     auto buttons_layout{new QHBoxLayout};
     buttons_layout->addWidget(run_);
-    buttons_layout->addWidget(break_);
-    buttons_layout->addWidget(exit_);
+    buttons_layout->addWidget(clear_all_);
+    buttons_layout->addWidget(clear_matches_);
+
+    auto exit_button_layout {new QHBoxLayout};
+    exit_button_layout->addStretch();
+    exit_button_layout->addWidget(exit_);
 
     auto main_layout{new QVBoxLayout};
     main_layout->addWidget(standard_group);
@@ -104,14 +131,17 @@ OptionsWidget::OptionsWidget(QWidget* const parent) :
     main_layout->addStretch(4);
     main_layout->addLayout(buttons_layout);
     main_layout->addStretch(100);
+    main_layout->addLayout(exit_button_layout);
     setLayout(main_layout);
+
 
     auto w = main_layout->minimumSize().width();
     setMinimumWidth(w);
     setMaximumWidth(w);
 
     connect(run_, &QPushButton::pressed, this, &OptionsWidget::run_slot);
-    connect(break_, &QPushButton::pressed, this, &OptionsWidget::break_slot);
+    connect(clear_all_, &QPushButton::pressed, this, &OptionsWidget::claer_all);
+    connect(clear_matches_, &QPushButton::pressed, this, &OptionsWidget::claer_matches);
     connect(exit_, &QPushButton::pressed, this, &QApplication::quit);
 }
 
@@ -139,9 +169,3 @@ void OptionsWidget::run_slot() noexcept {
                                            grammar,
                                            qstr::fromStdString(glz::write_json(variations)));
 }
-
-void OptionsWidget::break_slot() noexcept {
-    EventController::instance().send_event(event::RunRequest);
-}
-
-

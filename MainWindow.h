@@ -50,15 +50,13 @@ public:
     void create_menu() noexcept;
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
-    void std_regx(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) const noexcept;
-    [[nodiscard]] static std::vector<std::string> transform(qstr const& str) noexcept;
 
 private slots:
     static void open() noexcept {
         EventController::instance().send_event(event::OpenFile);
     };
     static void clear() noexcept {
-        EventController::instance().send_event(event::Clear);
+        EventController::instance().send_event(event::ClearAll);
     }
     void save() noexcept {
         EventController::instance().send_event(event::SaveFile);
@@ -75,15 +73,12 @@ private slots:
         );
     }
 
-
-
 private:
     QSplitter* const splitter_;
     OptionsWidget* const options_widget_;
     Workspace* const workspace_;
     bool first_show_{true};
 
-    static qstr const AppName;
     static char const * const FileTopMenu;
     static char const * const HelpTopMenu;
     static char const * const FileOpen;
@@ -94,7 +89,4 @@ private:
     static qstr const MainWindowSize;
     static qstr const MainWindowPosition;
     static qstr const MainWindowState;
-    static qstr const LastUsedDirectory;
-    static qstr const LastUsedFile;
-    static qstr const Error;
 };

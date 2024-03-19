@@ -32,8 +32,6 @@
 #include <QMessageBox>
 #include <QMdiSubWindow>
 #include <fstream>
-#include <chrono>
-#include <thread>
 #include <fmt/core.h>
 #include <glaze/glaze.hpp>
 
@@ -50,28 +48,33 @@ qstr const Workspace::LastUsedDirectory = "LastUsed/Directory";
 qstr const Workspace::LastUsedFile = "LastUsed/File";
 qstr const Workspace::Error = "Error";
 
+/*------- class implementation:
+-------------------------------------------------------------------*/
 Workspace::Workspace(QWidget *const parent) : QMdiArea(parent) {
     setViewMode(QMdiArea::TabbedView);
     addSubWindow(new WorkingWindow);
 
     auto p = palette();
-    p.setColor(QPalette::Window, QColor{60, 60, 60, 255});
+    p.setColor(QPalette::Window, Settings::BackgroundColor);
     setAutoFillBackground(true);
     setPalette(p);
 
-    setContentsMargins(0, 0, 0, 0);
+    setContentsMargins(Settings::NoMargins);
 
+    // Restore state from previous session.
     Settings sts;
     if (auto data = sts.read(LastUsedDirectory); data)
         last_used_dir_ = data.value().toString();
     if (auto data = sts.read(LastUsedFile); data)
         last_used_file_name_ = data.value().toString();
 
+    // I would like to recive these events.
     EventController::instance().append(this, event::RunRequest);
     EventController::instance().append(this, event::OpenFile);
     EventController::instance().append(this, event::SaveFile);
     EventController::instance().append(this, event::SaveAsFile);
-    EventController::instance().append(this, event::Clear);
+    EventController::instance().append(this, event::ClearAll);
+    EventController::instance().append(this, event::ClearMatches);
 }
 
 Workspace::~Workspace() {
@@ -79,6 +82,7 @@ Workspace::~Workspace() {
     sts.save(LastUsedDirectory, last_used_dir_);
     sts.save(LastUsedFile, last_used_file_name_);
 
+    // Stop to observe event.
     EventController::instance().remove(this);
 }
 
@@ -88,12 +92,14 @@ void Workspace::customEvent(QEvent *event) {
 
     switch (type) {
         case event::RunRequest: {
+            // Clear current visible matches content.
             current_mdiwidget()->clear_matches();
-
+            // Fetch user setting.
             auto const data = e->data();
             auto tool = data[0].toInt();
             auto grammar = data[1].toInt();
             auto variations = data[2].toString();
+            // Select tool and run.
             if (tool == tool::Std)
                 if (auto s = glz::read_json<std::vector<type::StdSyntaxOption>>(variations.toStdString()); s)
                     run_std(type::StdSyntaxOption(grammar), s.value());
@@ -112,19 +118,16 @@ void Workspace::customEvent(QEvent *event) {
             save_as();
             e->accept();
             break;
-        case event::Clear:
-            clear();
+        case event::ClearAll:
+            current_mdiwidget()->clear();
             e->accept();
             break;
-        default: {
-        }
+        case event::ClearMatches:
+            current_mdiwidget()->clear_matches();
+            break;
+        default: {}
     }
     QMdiArea::customEvent(event);
-}
-
-void Workspace::clear() noexcept {
-    if (auto it = current_mdiwidget(); it)
-        it->clear();
 }
 
 void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> vars) noexcept {
@@ -132,10 +135,10 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
     for (auto it : vars)
         opt |= it;
 
-    auto const it = current_mdiwidget();
-    auto const content = it->content();
+    auto const content = current_mdiwidget()->content();
     auto pattern_lines = content.regex;
     auto source_lines = content.source;
+    // We need and pattern and source text (both).
     if (pattern_lines.empty() or source_lines.empty())
         return;
 
@@ -165,13 +168,12 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
 }
 
 void Workspace::save() noexcept {
-    auto it = current_mdiwidget();
-    if (it->noname()) {
+    auto mdi_subwidget = current_mdiwidget();
+    if (mdi_subwidget->noname()) {
         save_as();
         return;
     }
-
-    auto const content = it->content();
+    auto const content = mdi_subwidget->content();
 
     // It is nothing to save.
     if (content.empty()) {
@@ -183,12 +185,12 @@ void Workspace::save() noexcept {
         return;
     }
 
-    save(QFileInfo(it->path()), content);
+    save(QFileInfo(mdi_subwidget->path()), content);
 }
 
 void Workspace::save_as() noexcept {
-    auto const it = current_mdiwidget();
-    auto const content = it->content();
+    auto const mdi_subwidget = current_mdiwidget();
+    auto const content = mdi_subwidget->content();
 
     // It is nothing to save.
     if (content.empty()) {
@@ -221,8 +223,9 @@ void Workspace::save_as() noexcept {
             if (auto answer = box.exec(); answer == QMessageBox::Cancel)
                 return;
         }
+
         save(fi, content);
-        it->set_content(fi.absoluteFilePath(), content);
+        mdi_subwidget->set_content(fi.absoluteFilePath(), content);
     }
 }
 
@@ -274,6 +277,17 @@ void Workspace::open() noexcept {
             auto content = Content::from_json(buffer);
             if (not content)
                 return;
+
+            {   // Check if this file is already in a mdi-subwindow
+                auto const all_windows = subWindowList();
+                for (auto const& mdi_subwindow : all_windows)
+                    if (auto mdi_subwidget = dynamic_cast<WorkingWindow*>(mdi_subwindow->widget()); mdi_subwidget)
+                        if (mdi_subwidget->path() == fi.absoluteFilePath()) {
+                            setActiveSubWindow(mdi_subwindow);
+                            mdi_subwidget->set_content(path, content.value());
+                            return;
+                        }
+            }
 
             // Populate current sub-window if 'noname'.
             if (auto const it = current_mdiwidget(); it->noname()) {
