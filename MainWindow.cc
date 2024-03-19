@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget* const parent) :
     QMainWindow(parent),
     splitter_{new QSplitter(Qt::Horizontal)},
     options_widget_{new OptionsWidget},
-    workspace_{new Workspace}
+    workspace_{new Workspace(options_widget_)}
 {
     auto p = palette();
     p.setColor(QPalette::Window, Settings::BackgroundColor);

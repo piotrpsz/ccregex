@@ -28,6 +28,7 @@
 #include "EventController.h"
 #include "WorkingWindow.h"
 #include "Settings.h"
+#include "OptionsWidget.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMdiSubWindow>
@@ -50,7 +51,10 @@ qstr const Workspace::Error = "Error";
 
 /*------- class implementation:
 -------------------------------------------------------------------*/
-Workspace::Workspace(QWidget *const parent) : QMdiArea(parent) {
+Workspace::Workspace(OptionsWidget* const options_widget, QWidget *const parent) :
+    QMdiArea(parent),
+    options_widget_{options_widget}
+{
     setViewMode(QMdiArea::TabbedView);
     addSubWindow(new WorkingWindow);
 

@@ -150,6 +150,19 @@ void OptionsWidget::run_slot() noexcept {
     if (qt_->isChecked()) tool = tool::Qt;
     if (pcre2_->isChecked()) tool = tool::Pcre2;
 
+    switch (tool) {
+        case tool::Std: {
+            auto [grammar, variations] = options_std();
+            auto json = glz::write_json(variations);
+            EventController::instance().send_event(event::RunRequest, tool, grammar, qstr::fromStdString(json));
+            break;
+        }
+        default: {}
+    }
+}
+
+std::pair<type::StdSyntaxOption, std::vector<type::StdSyntaxOption>>
+OptionsWidget::options_std() const noexcept {
     type::StdSyntaxOption grammar = std::regex_constants::ECMAScript;
     if (basic_->isChecked()) grammar = std::regex_constants::basic;
     if (extended_->isChecked()) grammar = std::regex_constants::extended;
@@ -164,8 +177,5 @@ void OptionsWidget::run_slot() noexcept {
     if (collate_->isChecked()) variations.push_back(std::regex_constants::collate);
     if (multiline_->isChecked()) variations.push_back(std::regex_constants::multiline);
 
-    EventController::instance().send_event(event::RunRequest,
-                                           tool,
-                                           grammar,
-                                           qstr::fromStdString(glz::write_json(variations)));
+    return {grammar, variations};
 }

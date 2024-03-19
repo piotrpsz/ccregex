@@ -27,6 +27,7 @@
 -------------------------------------------------------------------*/
 #include "EventController.h"
 #include <QWidget>
+#include <utility>
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
@@ -41,6 +42,8 @@ class OptionsWidget : public QWidget {
 public:
     explicit OptionsWidget(QWidget* = nullptr);
     ~OptionsWidget() override = default;
+    [[nodiscard]] std::pair<type::StdSyntaxOption, std::vector<type::StdSyntaxOption>>
+        options_std() const noexcept;
 
 private slots:
     void run_slot() noexcept;

@@ -35,13 +35,14 @@
 -------------------------------------------------------------------*/
 class QEvent;
 class WorkingWindow;
+class OptionsWidget;
 
 /*------- class:
 -------------------------------------------------------------------*/
 class Workspace : public QMdiArea {
     Q_OBJECT
 public:
-    explicit Workspace(QWidget* = nullptr);
+    explicit Workspace(OptionsWidget* options_widget, QWidget* = nullptr);
     ~Workspace() override;
 private:
     /// Handle user events
@@ -72,6 +73,7 @@ private:
     void save(QFileInfo const& fi, const Content& content) noexcept;
     [[nodiscard]] WorkingWindow* current_mdiwidget() const noexcept;
 
+    OptionsWidget* const options_widget_;
     qstr last_used_dir_{};
     qstr last_used_file_name_{};
     static char const * const NameFilter;
