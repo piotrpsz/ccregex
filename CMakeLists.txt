@@ -30,7 +30,7 @@ set(APP_SOURCES
         OptionsWidget.cc
         OptionsWidget.h
         Settings.h
-        Editor.cpp
+        Editor.cc
         Editor.h
         LabeledEditor.cc
         LabeledEditor.h
@@ -39,9 +39,9 @@ set(APP_SOURCES
         Types.h
         Event.h
         Content.h
-        Workspace.cpp
+        Workspace.cc
         Workspace.h
-        WorkingWindow.cpp
+        WorkingWindow.cc
         WorkingWindow.h
         model/Match.h
         Highlighter.cc
