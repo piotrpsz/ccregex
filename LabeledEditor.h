@@ -39,7 +39,7 @@ class Editor;
 -------------------------------------------------------------------*/
 class LabeledEditor : public QWidget {
 public:
-    explicit LabeledEditor(qstr const& title, bool read_only = false, QWidget* parent = nullptr);
+    explicit LabeledEditor(qstr const&, Highlighting = Highlighting::No, ReadOnly = ReadOnly::No, QWidget* = nullptr);
     ~LabeledEditor() override = default;
 
     [[nodiscard]] qstr content() const noexcept {

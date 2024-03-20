@@ -25,10 +25,12 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Editor.h"
+#include "Highlighter.h"
 #include "EventController.h"
+#include <fmt/core.h>
 using namespace std;
 
-Editor::Editor(QWidget* const parent) :
+Editor::Editor(Highlighting const highlighting, QWidget* const parent) :
         QTextEdit(parent)
 {
     setAcceptRichText(true);
@@ -48,6 +50,11 @@ Editor::Editor(QWidget* const parent) :
     font.setKerning(true);
     font.setPointSize(12);
     setFont(font);
+
+    if (highlighting == Highlighting::Yes) {
+        highlighter_ = new Highlighter(document());
+        EventController::instance().append(this, event::Match);
+    }
 }
 
 void Editor::customEvent(QEvent *event) {
@@ -62,7 +69,13 @@ void Editor::customEvent(QEvent *event) {
                 }
             }
             break;
-
+        case event::Match: {
+            auto str = e->data()[0].toString();
+            fmt::print("Editor::customEvent::Match: {}\n", str.toStdString());
+            break;
+        }
+        default:
+        {}
     }
 }
 

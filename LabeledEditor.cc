@@ -25,22 +25,28 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Editor.h"
+#include "Settings.h"
 #include "LabeledEditor.h"
 #include "EventController.h"
 #include <QLabel>
 #include <QBoxLayout>
 
-LabeledEditor::LabeledEditor(QString const& title, bool const read_only, QWidget *parent) :
-        QWidget(parent),
-        editor_{new Editor}
+LabeledEditor::LabeledEditor(
+        QString const& title,
+        Highlighting const highlighting,
+        ReadOnly const read_only,
+        QWidget* const parent
+) :
+    QWidget(parent),
+    editor_{new Editor(highlighting)}
 {
-    if (read_only) {
+    if (read_only == ReadOnly::Yes) {
         editor_->setReadOnly(true);
         EventController::instance().append(editor_, event::AppendLine);
     }
 
     auto p = palette();
-    p.setColor(QPalette::Base, QColor{60, 60, 60, 255});
+    p.setColor(QPalette::Base, Settings::BackgroundColor);
     setAutoFillBackground(true);
     setPalette(p);
 
@@ -56,8 +62,8 @@ LabeledEditor::LabeledEditor(QString const& title, bool const read_only, QWidget
     header_layout->addStretch();
 
     auto main_layout{new QVBoxLayout};
-    main_layout->setSpacing(0);
-    main_layout->setContentsMargins(0, 0, 0, 0);
+    main_layout->setSpacing(Settings::NoSpacing);
+    main_layout->setContentsMargins(Settings::NoMargins);
     main_layout->addLayout(header_layout);
     main_layout->addWidget(editor_);
 

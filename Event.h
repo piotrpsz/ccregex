@@ -45,6 +45,7 @@ public:
     }
 };
 
+
 /*------- user's events:
 -------------------------------------------------------------------*/
 namespace event {
@@ -57,6 +58,7 @@ namespace event {
         BreakRequest,
         AppendLine,
         ClearAll,
-        ClearMatches
+        ClearMatches,
+        Match
    };
 }

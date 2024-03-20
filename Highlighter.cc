@@ -20,66 +20,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 15/03/2024.
-#pragma once
+// Created by Piotr Pszczółkowski on 20/03/2024.
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include <QVariant>
-#include <QString>
-#include <QSet>
-#include <QList>
-#include <regex>
-#include <vector>
-#include <string>
+#include "Highlighter.h"
+#include <QTextDocument>
+#include <fmt/core.h>
 
-
-namespace tool {
-    enum {
-        Std = 0,
-        Pcre2,
-        Qt
-    };
-
+Highlighter::Highlighter(QTextDocument* const parent) : QSyntaxHighlighter(parent) {
 
 }
 
-/*------- types:
--------------------------------------------------------------------*/
-using i8 = qint8;
-using u8 = quint8;
-using i32 = qint32;
-using u32 = quint32;
-using u64 = quint64;
-using isize = qsizetype;
-using qstr = QString;
-using qvar = QVariant;
-using strings = std::vector<std::string>;
-
-
-/*------- template types:
--------------------------------------------------------------------*/
-template<typename T>
-    using qvec = QVector<T>;
-template<typename T>
-    using qset = QSet<T>;
-template<typename K, typename V>
-    using qhash = QHash<K,V>;
-template<typename T>
-    using qlist = QList<T>;
-
-namespace type {
-    using StdSyntaxOption = std::regex_constants::syntax_option_type;
-    static inline qstr const EmptyString{};
-    static inline qstr const NoName{"noname"};
+void Highlighter::highlightBlock(qstr const& text) {
+    fmt::print("Highlighter::hoghlightBlox: {}\n", text.toStdString());
 }
-
-enum class Highlighting {
-    No,
-    Yes
-};
-enum class ReadOnly {
-    No,
-    Yes,
-};
-

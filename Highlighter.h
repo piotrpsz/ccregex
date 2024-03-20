@@ -20,66 +20,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 15/03/2024.
+// Created by Piotr Pszczółkowski on 20/03/2024.
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include <QVariant>
-#include <QString>
-#include <QSet>
-#include <QList>
-#include <regex>
+#include "Types.h"
+#include "model/Match.h"
+#include <QSyntaxHighlighter>
 #include <vector>
-#include <string>
 
+/*------- forward declarations:
+-------------------------------------------------------------------*/
+class QTextDocument;
 
-namespace tool {
-    enum {
-        Std = 0,
-        Pcre2,
-        Qt
+class Highlighter : public QSyntaxHighlighter {
+    Q_OBJECT
+public:
+    Highlighter(QTextDocument* = nullptr);
+    ~Highlighter() override = default;
+
+    Highlighter(Highlighter const&) = delete;
+    Highlighter(Highlighter&&) = delete;
+    Highlighter& operator=(Highlighter const&) = delete;
+    Highlighter& operator=(Highlighter&&) = delete;
+
+    void upate(std::vector<Match> data) noexcept {
+        data_ = std::move((data));
+        rehighlight();
     };
+private:
+    void highlightBlock(qstr const& text) override;
 
-
-}
-
-/*------- types:
--------------------------------------------------------------------*/
-using i8 = qint8;
-using u8 = quint8;
-using i32 = qint32;
-using u32 = quint32;
-using u64 = quint64;
-using isize = qsizetype;
-using qstr = QString;
-using qvar = QVariant;
-using strings = std::vector<std::string>;
-
-
-/*------- template types:
--------------------------------------------------------------------*/
-template<typename T>
-    using qvec = QVector<T>;
-template<typename T>
-    using qset = QSet<T>;
-template<typename K, typename V>
-    using qhash = QHash<K,V>;
-template<typename T>
-    using qlist = QList<T>;
-
-namespace type {
-    using StdSyntaxOption = std::regex_constants::syntax_option_type;
-    static inline qstr const EmptyString{};
-    static inline qstr const NoName{"noname"};
-}
-
-enum class Highlighting {
-    No,
-    Yes
+    std::vector<Match> data_{};
 };
-enum class ReadOnly {
-    No,
-    Yes,
-};
-

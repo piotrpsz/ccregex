@@ -50,6 +50,9 @@ set(APP_SOURCES
         Workspace.h
         WorkingWindow.cpp
         WorkingWindow.h
+        model/Match.h
+        Highlighter.cc
+        Highlighter.h
 )
 set(APP_LIBS
         Qt6::Core
