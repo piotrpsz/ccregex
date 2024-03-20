@@ -39,7 +39,7 @@ Highlighter::Highlighter(QTextDocument* const parent) : QSyntaxHighlighter(paren
 }
 
 void Highlighter::highlightBlock(qstr const& line) {
-    if (line.isEmpty()) return;
+    if (line.isEmpty() or data_.empty()) return;
 
     fmt::print("Line: {}\n", line.toStdString());
     auto text = line.toStdString();

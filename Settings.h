@@ -54,7 +54,7 @@ public:
         return {};
     }
 
-    static inline qstr const AppName = "cc-regex v. 0.1.0";
+    static inline qstr const AppName = "cc-regex v. 0.2.0";
     static inline QColor const BackgroundColor{60, 60, 60};
     static inline QMargins const NoMargins{0, 0, 0, 0};
     static inline int const NoHandle{0};

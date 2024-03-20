@@ -153,10 +153,10 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
                 std::regex rgx(pattern, opt);
                 auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
                 auto match_end_it = std::sregex_iterator();
+                std::vector<Match> buffer;
                 for (auto it = match_begin_it; it != match_end_it; ++it) {
                     std::smatch match = *it;
                     EventController::instance().send_event(event::AppendLine, "--------------------------");
-                    std::vector<Match> buffer;
                     for (uint i = 0; i < match.size(); ++i) {
                         auto const pos = int(match.position(i));
                         auto const length = int(match.length(i));
@@ -166,9 +166,9 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
                         EventController::instance().send_event(event::AppendLine, qstr::fromStdString(text));
                         buffer.push_back(Match{.nr = int(i), .pos = pos, .length = length, .str = str});
                     }
-                    auto matches_json = glz::write_json(buffer);
-                    EventController::instance().send_event(event::Match, qstr::fromStdString(matches_json));
                 }
+                auto matches_json = glz::write_json(buffer);
+                EventController::instance().send_event(event::Match, qstr::fromStdString(matches_json));
             }
             catch (std::regex_error const& e) {
                 auto msg = qstr::fromStdString(e.what());

@@ -41,4 +41,5 @@ Patterns and sources can be saved to a file on disk and read from them (see app 
 <lu>
     <li>0.0.1 - initial working version</li>
     <li>0.1.0 - it is possible to work with several documents at the same time</li>
+    <li>0.2.0 - it is added match highlighting in source editor</li>
 </lu>
