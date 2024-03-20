@@ -29,9 +29,25 @@
 #include <fmt/core.h>
 
 Highlighter::Highlighter(QTextDocument* const parent) : QSyntaxHighlighter(parent) {
-
+    auto const n = 5;
+    auto font = parent->defaultFont();
+    for (int i = 0; i < n; ++i) {
+        format_[i].setFont(font);
+        format_[i].setBackground(QColor{200, 200, 200});
+        format_[i].setForeground(QColor{10, 10, 10});
+    }
 }
 
-void Highlighter::highlightBlock(qstr const& text) {
-    fmt::print("Highlighter::hoghlightBlox: {}\n", text.toStdString());
+void Highlighter::highlightBlock(qstr const& line) {
+    if (line.isEmpty()) return;
+
+    fmt::print("Line: {}\n", line.toStdString());
+    auto text = line.toStdString();
+    for (auto const& match : data_)
+        if (text.contains(match.str)) {
+            if (match.nr == 0) {
+                setFormat(match.pos, match.length, format_[0]);
+                fmt::print("-- {}\n", match.as_str());
+            }
+        }
 }

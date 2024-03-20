@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.27)
 set(PCRE2 ON)
 
 project(ccregex)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
+
+
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()

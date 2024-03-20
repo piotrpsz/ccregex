@@ -70,9 +70,13 @@ void Editor::customEvent(QEvent *event) {
             }
             break;
         case event::Match: {
-            auto str = e->data()[0].toString();
-            fmt::print("Editor::customEvent::Match: {}\n", str.toStdString());
-            break;
+            auto str = e->data()[0].toString().toStdString();
+            auto data = glz::read_json<vector<Match>>(str);
+            if (not data.has_value()) {
+                fmt::print(stderr, "ERROR: invalid JSON string\n");
+                return;
+            }
+            highlighter_->upate_for(std::move(data.value()));
         }
         default:
         {}

@@ -38,6 +38,10 @@ struct Match {
     int length{};
     std::string str{};
 
+    [[nodiscard]] std::string as_str() const noexcept {
+        return glz::prettify(glz::write_json(this));
+    }
+
     /// Convert structure to JSON string
     [[nodiscard]] std::string to_json(bool const pretty = false) const noexcept {
         auto buffer = glz::write_json(this);

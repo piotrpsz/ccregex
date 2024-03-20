@@ -27,7 +27,9 @@
 -------------------------------------------------------------------*/
 #include "Types.h"
 #include "model/Match.h"
+#include <QFont>
 #include <QSyntaxHighlighter>
+#include <QTextCharFormat>
 #include <vector>
 
 /*------- forward declarations:
@@ -35,7 +37,7 @@
 class QTextDocument;
 
 class Highlighter : public QSyntaxHighlighter {
-    Q_OBJECT
+    QTextCharFormat format_[5]{QTextCharFormat{}};
 public:
     Highlighter(QTextDocument* = nullptr);
     ~Highlighter() override = default;
@@ -45,7 +47,7 @@ public:
     Highlighter& operator=(Highlighter const&) = delete;
     Highlighter& operator=(Highlighter&&) = delete;
 
-    void upate(std::vector<Match> data) noexcept {
+    void upate_for(std::vector<Match> data) noexcept {
         data_ = std::move((data));
         rehighlight();
     };
