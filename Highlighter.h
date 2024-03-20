@@ -20,44 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 14/03/2024.
+// Created by Piotr Pszczółkowski on 20/03/2024.
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
 #include "Types.h"
-#include <QColor>
-#include <QString>
-#include <QVariant>
-#include <QMargins>
-#include <QSettings>
-#include <optional>
+#include "model/Match.h"
+#include <QFont>
+#include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <vector>
 
-/*------- class:
+/*------- forward declarations:
 -------------------------------------------------------------------*/
-class Settings : public QSettings {
+class QTextDocument;
+
+class Highlighter : public QSyntaxHighlighter {
+    QTextCharFormat format_[5]{QTextCharFormat{}};
 public:
-    Settings() : QSettings() {};
-    ~Settings() override = default;
-    Settings(Settings const&) = delete;
-    Settings& operator=(Settings const&) = delete;
+    Highlighter(QTextDocument* = nullptr);
+    ~Highlighter() override = default;
 
-    bool save(qstr const& key, qvar const&& data) noexcept {
-        setValue(key, data);
-        return NoError == status();
-    }
+    Highlighter(Highlighter const&) = delete;
+    Highlighter(Highlighter&&) = delete;
+    Highlighter& operator=(Highlighter const&) = delete;
+    Highlighter& operator=(Highlighter&&) = delete;
 
-    std::optional<qvar> read(qstr const& key) noexcept {
-        if (contains(key))
-            if (auto data = value(key); status() == NoError)
-                return std::move(data);
-        return {};
-    }
+    void upate_for(std::vector<Match> data) noexcept {
+        data_ = std::move((data));
+        rehighlight();
+    };
+private:
+    void highlightBlock(qstr const& text) override;
 
-    static inline qstr const AppName = "cc-regex v. 0.2.0";
-    static inline QColor const BackgroundColor{60, 60, 60};
-    static inline QMargins const NoMargins{0, 0, 0, 0};
-    static inline int const NoHandle{0};
-    static inline int const NoSpacing{0};
+    std::vector<Match> data_{};
 };
-

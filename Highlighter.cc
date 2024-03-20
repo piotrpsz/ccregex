@@ -20,44 +20,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 14/03/2024.
-#pragma once
+// Created by Piotr Pszczółkowski on 20/03/2024.
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include "Types.h"
-#include <QColor>
-#include <QString>
-#include <QVariant>
-#include <QMargins>
-#include <QSettings>
-#include <optional>
+#include "Highlighter.h"
+#include <QTextDocument>
+#include <fmt/core.h>
 
-/*------- class:
--------------------------------------------------------------------*/
-class Settings : public QSettings {
-public:
-    Settings() : QSettings() {};
-    ~Settings() override = default;
-    Settings(Settings const&) = delete;
-    Settings& operator=(Settings const&) = delete;
-
-    bool save(qstr const& key, qvar const&& data) noexcept {
-        setValue(key, data);
-        return NoError == status();
+Highlighter::Highlighter(QTextDocument* const parent) : QSyntaxHighlighter(parent) {
+    auto const n = 5;
+    auto font = parent->defaultFont();
+    for (int i = 0; i < n; ++i) {
+        format_[i].setFont(font);
+        format_[i].setBackground(QColor{200, 200, 200});
+        format_[i].setForeground(QColor{10, 10, 10});
     }
+}
 
-    std::optional<qvar> read(qstr const& key) noexcept {
-        if (contains(key))
-            if (auto data = value(key); status() == NoError)
-                return std::move(data);
-        return {};
-    }
+void Highlighter::highlightBlock(qstr const& line) {
+    if (line.isEmpty() or data_.empty()) return;
 
-    static inline qstr const AppName = "cc-regex v. 0.2.0";
-    static inline QColor const BackgroundColor{60, 60, 60};
-    static inline QMargins const NoMargins{0, 0, 0, 0};
-    static inline int const NoHandle{0};
-    static inline int const NoSpacing{0};
-};
-
+    fmt::print("Line: {}\n", line.toStdString());
+    auto text = line.toStdString();
+    for (auto const& match : data_)
+        if (text.contains(match.str)) {
+            if (match.nr == 0) {
+                setFormat(match.pos, match.length, format_[0]);
+                fmt::print("-- {}\n", match.as_str());
+            }
+        }
+}

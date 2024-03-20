@@ -33,12 +33,14 @@
 /*------- forward declaration:
 -------------------------------------------------------------------*/
 class QEvent;
+class Highlighter;
 
 /*------- class:
 -------------------------------------------------------------------*/
 class Editor : public QTextEdit {
+    Q_OBJECT
 public:
-    explicit Editor(QWidget* parent = nullptr);
+    explicit Editor(Highlighting = Highlighting::No, QWidget* parent = nullptr);
     ~Editor() override = default;
 
     void customEvent(QEvent* event) override;
@@ -48,4 +50,6 @@ public:
     }
 
     void set(std::vector<std::string> const& data) noexcept;
+private:
+    Highlighter* highlighter_{};
 };

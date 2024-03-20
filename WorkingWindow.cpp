@@ -36,8 +36,8 @@ WorkingWindow::WorkingWindow(qstr path, qstr name, QWidget *const parent) :
         QWidget(parent),
         splitter_{new QSplitter{Qt::Vertical}},
         regex_edit_{new LabeledEditor("Regular Expression")},
-        source_edit_{new LabeledEditor("Source String")},
-        matches_view_{new LabeledEditor("Matches", true)},
+        source_edit_{new LabeledEditor("Source String", Highlighting::Yes)},
+        matches_view_{new LabeledEditor("Matches", Highlighting::No, ReadOnly::Yes)},
         path_{std::move(path)},
         name_{std::move(name)}
 {

@@ -2,14 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 set(PCRE2 ON)
 
 project(ccregex)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD 20)
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif ()
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-Og")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -50,6 +43,9 @@ set(APP_SOURCES
         Workspace.h
         WorkingWindow.cpp
         WorkingWindow.h
+        model/Match.h
+        Highlighter.cc
+        Highlighter.h
 )
 set(APP_LIBS
         Qt6::Core

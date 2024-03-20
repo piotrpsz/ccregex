@@ -73,3 +73,13 @@ namespace type {
     static inline qstr const EmptyString{};
     static inline qstr const NoName{"noname"};
 }
+
+enum class Highlighting {
+    No,
+    Yes
+};
+enum class ReadOnly {
+    No,
+    Yes,
+};
+

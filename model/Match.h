@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2023 Piotr Pszczółkowski
+// Copyright (c) 2024 Piotr Pszczółkowski
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,44 +20,55 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 14/03/2024.
+// Created by Piotr Pszczółkowski on 20/03/2024.
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include "Types.h"
-#include <QColor>
-#include <QString>
-#include <QVariant>
-#include <QMargins>
-#include <QSettings>
+#include <string>
 #include <optional>
+#include <fmt/core.h>
+#include <glaze/glaze.hpp>
 
-/*------- class:
+/*------- struct:
 -------------------------------------------------------------------*/
-class Settings : public QSettings {
-public:
-    Settings() : QSettings() {};
-    ~Settings() override = default;
-    Settings(Settings const&) = delete;
-    Settings& operator=(Settings const&) = delete;
+struct Match {
+    int nr{};
+    int pos{};
+    int length{};
+    std::string str{};
 
-    bool save(qstr const& key, qvar const&& data) noexcept {
-        setValue(key, data);
-        return NoError == status();
+    [[nodiscard]] std::string as_str() const noexcept {
+        return glz::prettify(glz::write_json(this));
     }
 
-    std::optional<qvar> read(qstr const& key) noexcept {
-        if (contains(key))
-            if (auto data = value(key); status() == NoError)
-                return std::move(data);
-        return {};
+    /// Convert structure to JSON string
+    [[nodiscard]] std::string to_json(bool const pretty = false) const noexcept {
+        auto buffer = glz::write_json(this);
+        if (not pretty)
+            return buffer;
+        return glz::prettify(buffer);
     }
 
-    static inline qstr const AppName = "cc-regex v. 0.2.0";
-    static inline QColor const BackgroundColor{60, 60, 60};
-    static inline QMargins const NoMargins{0, 0, 0, 0};
-    static inline int const NoHandle{0};
-    static inline int const NoSpacing{0};
+    /// Create Match-object from JSON string.
+    static std::optional<Match> from_json(std::string const& json) noexcept {
+        Match match{};
+        if (auto const ec = glz::read_json(match, json); ec) {
+            fmt::print(stderr, "JSON parser error: {}\n", ec.includer_error);
+            return {};
+        }
+        return match;
+    }
 };
 
+/*------- template struct for glz:
+-------------------------------------------------------------------*/
+template<>
+struct glz::meta<Match> {
+    static constexpr auto value = object(
+            "nr", &Match::nr,
+            "pos", &Match::pos,
+            "length", &Match::length,
+            "str", &Match::str
+    );
+};
