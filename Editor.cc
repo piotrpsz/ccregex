@@ -53,8 +53,15 @@ Editor::Editor(Highlighting const highlighting, QWidget* const parent) :
 
     if (highlighting == Highlighting::Yes) {
         highlighter_ = new Highlighter(document());
+        connect(this, &QTextEdit::textChanged, this, &Editor::text_changed);
         EventController::instance().append(this, event::Match);
+
     }
+}
+
+void Editor::text_changed() noexcept {
+    // Highlighting off
+    highlighter_->action(false);
 }
 
 void Editor::customEvent(QEvent *event) {

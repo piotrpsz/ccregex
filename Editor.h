@@ -50,6 +50,9 @@ public:
     }
 
     void set(std::vector<std::string> const& data) noexcept;
+private slots:
+    void text_changed() noexcept;
+
 private:
     Highlighter* highlighter_{};
 };

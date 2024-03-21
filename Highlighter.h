@@ -49,10 +49,19 @@ public:
 
     void upate_for(std::vector<Match> data) noexcept {
         data_ = std::move((data));
+        action_ = true;
         rehighlight();
     };
+
+    bool action() const noexcept {
+        return action_;
+    }
+    void action(bool const flag) noexcept {
+        action_ = flag;
+    }
 private:
     void highlightBlock(qstr const& text) override;
 
+    bool action_{};
     std::vector<Match> data_{};
 };
