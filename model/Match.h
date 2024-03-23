@@ -33,7 +33,7 @@
 /*------- struct:
 -------------------------------------------------------------------*/
 struct Match {
-    int nr{};
+    int level{};
     int pos{};
     int length{};
     std::string str{};
@@ -66,7 +66,7 @@ struct Match {
 template<>
 struct glz::meta<Match> {
     static constexpr auto value = object(
-            "nr", &Match::nr,
+            "level", &Match::level,
             "pos", &Match::pos,
             "length", &Match::length,
             "str", &Match::str

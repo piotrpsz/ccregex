@@ -60,4 +60,3 @@ public:
     static inline int const NoHandle{0};
     static inline int const NoSpacing{0};
 };
-

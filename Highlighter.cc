@@ -41,13 +41,9 @@ Highlighter::Highlighter(QTextDocument* const parent) : QSyntaxHighlighter(paren
 void Highlighter::highlightBlock(qstr const& line) {
     if (not action_ or line.isEmpty() or data_.empty()) return;
 
-    fmt::print("Line: {}\n", line.toStdString());
     auto text = line.toStdString();
     for (auto const& match : data_)
-        if (text.contains(match.str)) {
-            if (match.nr == 0) {
+        if (text.contains(match.str))
+            if (match.level == 0)
                 setFormat(match.pos, match.length, format_[0]);
-                fmt::print("-- {}\n", match.as_str());
-            }
-        }
 }

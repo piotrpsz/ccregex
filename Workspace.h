@@ -52,7 +52,9 @@ private:
     /// Execute regex process for std.
     /// \param grammar - information about used grammar,
     /// \param variations - other user requirements
-    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> variations) noexcept;
+    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> const&variations) noexcept;
+
+    void run_pcre2() noexcept;
 
     /// Open and read file from disk. \n
     /// Content for current mdi-subwindow.
