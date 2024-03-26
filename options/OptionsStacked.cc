@@ -70,3 +70,7 @@ void OptionsStacked::customEvent(QEvent* const event) {
     }
     QStackedWidget::customEvent(event);
 }
+
+std::string OptionsStacked::options() const noexcept {
+    return {};
+}

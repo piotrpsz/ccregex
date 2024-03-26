@@ -36,6 +36,7 @@ class QEvent;
 class QCheckBox;
 class QPushButton;
 class QRadioButton;
+class OptionsStacked;
 
 /*------- class declaration:
 -------------------------------------------------------------------*/
@@ -59,20 +60,10 @@ private slots:
     void tool_changed() noexcept;
 
 private:
+    OptionsStacked* const options_stacked_;
     QRadioButton* const std_;
     QRadioButton* const qt_;
     QRadioButton* const pcre2_;
-    QRadioButton* const ecma_;
-    QRadioButton* const basic_;
-    QRadioButton* const extended_;
-    QRadioButton* const awk_;
-    QRadioButton* const grep_;
-    QRadioButton* const egrep_;
-    QCheckBox* const icace_;
-    QCheckBox* const nosubs_;
-    QCheckBox* const optimize_;
-    QCheckBox* const collate_;
-    QCheckBox* const multiline_;
 
     QPushButton* const run_;
     QPushButton* const clear_all_;
@@ -82,17 +73,6 @@ private:
     static char const * const StdRegex;
     static char const * const QtRegex;
     static char const * const PcreRegex;
-    static char const * const EcmaScript;
-    static char const * const BasicPosix;
-    static char const * const ExtendedPosix;
-    static char const * const AwkPosix;
-    static char const * const GrepPosix;
-    static char const * const GrepPosixE;
-    static char const * const IgnoreCase;
-    static char const * const NoSubs;
-    static char const * const Optimize;
-    static char const * const Collate;
-    static char const * const Multiline;
 
     static char const * const Run;
     static char const * const ClearAll;
