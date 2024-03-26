@@ -26,7 +26,7 @@
 -------------------------------------------------------------------*/
 #include "Settings.h"
 #include "MainWindow.h"
-#include "OptionsWidget.h"
+#include "options/OptionsWidget.h"
 #include "Workspace.h"
 #include <QMenu>
 #include <QMenuBar>

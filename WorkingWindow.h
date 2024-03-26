@@ -56,11 +56,10 @@ public:
     void set_content(Content const& content) noexcept;
 
     /// Return content of all editors.
-    [[nodiscard]] Content content() const noexcept {
-        auto regex_content = transform(regex_edit_->content().trimmed());
-        auto source_content = transform(source_edit_->content().trimmed());
-        auto matches_content = transform(matches_view_->content().trimmed());
-        return {regex_content, source_content, matches_content};
+    void fetch_content(Content& content) const noexcept {
+        content.regex = transform(regex_edit_->content().trimmed());
+        content.source = transform(source_edit_->content().trimmed());
+        content.matches = transform(matches_view_->content().trimmed());
     }
 
     /// Delete content in all editors.

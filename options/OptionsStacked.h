@@ -20,68 +20,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-// Created by Piotr Pszczółkowski on 15/03/2024.
+// Created by Piotr Pszczółkowski on 26/03/2024.
 #pragma once
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include <QVariant>
-#include <QString>
-#include <QSet>
-#include <QList>
-#include <regex>
-#include <vector>
-#include <string>
-#include <glaze/glaze.hpp>
+#include <QStackedWidget>
 
-enum class Engine : int {
-    Std = 0,
-    Pcre2,
-    Qt,
-};
-
-template <>
-struct glz::meta<Engine> {
-    using enum Engine;
-    static constexpr auto value = enumerate(Std, Pcre2, Qt);
-};
-
-/*------- types:
+/*------- forward declarations:
 -------------------------------------------------------------------*/
-using i8 = qint8;
-using u8 = quint8;
-using i32 = qint32;
-using u32 = quint32;
-using u64 = quint64;
-using isize = qsizetype;
-using qstr = QString;
-using qvar = QVariant;
-using strings = std::vector<std::string>;
+class StdOptionsWidget;
+class QtOptionsWidget;
+class PcreOptionsWidget;
+class QEvent;
 
 
-/*------- template types:
+/*------- class:
 -------------------------------------------------------------------*/
-template<typename T>
-    using qvec = QVector<T>;
-template<typename T>
-    using qset = QSet<T>;
-template<typename K, typename V>
-    using qhash = QHash<K,V>;
-template<typename T>
-    using qlist = QList<T>;
+class OptionsStacked : public QStackedWidget {
+    Q_OBJECT
+public:
+    explicit OptionsStacked(QWidget* parent = nullptr);
+    ~OptionsStacked() override;
 
-namespace type {
-    using StdSyntaxOption = std::regex_constants::syntax_option_type;
-    static inline qstr const EmptyString{};
-    static inline qstr const NoName{"noname"};
-}
+private:
+    void customEvent(QEvent*) override;
 
-enum class Highlighting {
-    No,
-    Yes
+    StdOptionsWidget* const std_options_widget_;
+    QtOptionsWidget* const qt_options_widget_;
+    PcreOptionsWidget* const pcre_options_widget_;
 };
-enum class ReadOnly {
-    No,
-    Yes,
-};
-

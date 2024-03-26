@@ -59,7 +59,7 @@ private slots:
         EventController::instance().send_event(event::ClearAll);
     }
     static void save() noexcept {
-        EventController::instance().send_event(event::SaveFile);
+        EventController::instance().send_event(event::SaveFileRequest);
     }
     static void save_as() noexcept {
         EventController::instance().send_event(event::SaveAsFile);

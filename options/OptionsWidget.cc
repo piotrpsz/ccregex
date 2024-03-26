@@ -24,9 +24,10 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
-#include "Types.h"
+#include "../Types.h"
 #include "OptionsWidget.h"
-#include "EventController.h"
+#include "OptionsStacked.h"
+#include "../EventController.h"
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QBoxLayout>
@@ -52,7 +53,6 @@ char const *const OptionsWidget::NoSubs = QT_TR_NOOP("nosubs [marked sub-express
 char const *const OptionsWidget::Optimize = QT_TR_NOOP("optimize [slower construction, faster matching]");
 char const *const OptionsWidget::Collate = QT_TR_NOOP("collate [locale sensitive]");
 char const *const OptionsWidget::Multiline = QT_TR_NOOP("multiline");
-
 char const *const OptionsWidget::Run = QT_TR_NOOP("Run");
 char const *const OptionsWidget::ClearAll = QT_TR_NOOP("Clear");
 char const *const OptionsWidget::ClearMatches = QT_TR_NOOP("Clear Matches");
@@ -81,18 +81,22 @@ OptionsWidget::OptionsWidget(QWidget *const parent) :
         clear_matches_{new QPushButton{tr(ClearMatches)}},
         exit_{new QPushButton{tr(Exit)}}
 {
+    // Initial settings
     std_->setChecked(true);
     ecma_->setChecked(true);
-    qt_->setEnabled(false);
+    pcre2_->setEnabled(false);
 
-    auto standard_group{new QGroupBox{"Tool"}};
-    auto standard_layout{new QVBoxLayout};
-    standard_layout->addWidget(std_);
-    standard_layout->addWidget(qt_);
+    // TOOL group/layout
+    auto tool_layout{new QVBoxLayout};
+    tool_layout->addWidget(std_);
+    tool_layout->addWidget(qt_);
 #ifdef PCRE2_REGEX
-    standard_layout->addWidget(pcre2_);
+    tool_layout->addWidget(pcre2_);
 #endif
-    standard_group->setLayout(standard_layout);
+    auto tool_group{new QGroupBox{"Tool"}};
+    tool_group->setLayout(tool_layout);
+    connect(std_, &QRadioButton::clicked, this, &OptionsWidget::tool_changed);
+    connect(qt_, &QRadioButton::clicked, this, &OptionsWidget::tool_changed);
 
     auto grammar_group{new QGroupBox{"Grammar option"}};
     auto grammar_layout{new QVBoxLayout};
@@ -123,13 +127,14 @@ OptionsWidget::OptionsWidget(QWidget *const parent) :
     exit_button_layout->addWidget(exit_);
 
     auto main_layout{new QVBoxLayout};
-    main_layout->addWidget(standard_group);
-    main_layout->addWidget(grammar_group);
-    main_layout->addWidget(variation_group);
-    main_layout->addStretch(4);
-    main_layout->addLayout(buttons_layout);
-    main_layout->addStretch(100);
-    main_layout->addLayout(exit_button_layout);
+    main_layout->addWidget(tool_group);
+    main_layout->addWidget(new OptionsStacked);
+//    main_layout->addWidget(grammar_group);
+//    main_layout->addWidget(variation_group);
+//    main_layout->addStretch(4);
+//    main_layout->addLayout(buttons_layout);
+//    main_layout->addStretch(100);
+//    main_layout->addLayout(exit_button_layout);
     setLayout(main_layout);
 
 
@@ -141,24 +146,39 @@ OptionsWidget::OptionsWidget(QWidget *const parent) :
     connect(clear_all_, &QPushButton::pressed, this, &OptionsWidget::claer_all);
     connect(clear_matches_, &QPushButton::pressed, this, &OptionsWidget::claer_matches);
     connect(exit_, &QPushButton::pressed, this, &QApplication::quit);
+
+    EventController::instance().append(this, event::SaveFileRequest);
 }
 
-void OptionsWidget::run_slot() noexcept {
-    auto tool = tool::Std;
-    if (qt_->isChecked()) tool = tool::Qt;
-    if (pcre2_->isChecked()) tool = tool::Pcre2;
+OptionsWidget::~OptionsWidget() {
+    EventController::instance().remove(this);
+}
 
-    switch (tool) {
-        case tool::Std: {
-            auto [grammar, variations] = options_std();
-            auto json = glz::write_json(variations);
-            EventController::instance().send_event(event::RunRequest, tool, grammar, qstr::fromStdString(json));
+void OptionsWidget::customEvent(QEvent* const event) {
+    auto const e = dynamic_cast<Event*>(event);
+
+    switch (auto type = static_cast<int>(e->type()); type) {
+        case event::SaveFileRequest: {
+            auto content = options();
+            auto json = glz::write_json(content);
+            EventController::instance().send_event(event::SaveFile, qstr::fromStdString(json));
+            return;
+        }
+        default:
+        {}
+    }
+}
+
+void OptionsWidget::run_slot() const noexcept {
+    switch (auto content = options(); content.engine) {
+        case Engine::Std: {
+            auto json = glz::write_json(content);
+            EventController::instance().send_event(event::RunRequest, qstr::fromStdString(json));
             break;
         }
-        case tool::Pcre2: {
-//            auto [grammar, variations] = options_std();
-//            auto json = glz::write_json(variations);
-            EventController::instance().send_event(event::RunRequest, tool);
+        case Engine::Pcre2: {
+            auto json = glz::write_json(content);
+            EventController::instance().send_event(event::RunRequest, qstr::fromStdString(json));
             break;
         }
         default: {
@@ -166,8 +186,11 @@ void OptionsWidget::run_slot() noexcept {
     }
 }
 
-std::pair<type::StdSyntaxOption, std::vector<type::StdSyntaxOption>>
-OptionsWidget::options_std() const noexcept {
+Content OptionsWidget::options() const noexcept {
+    auto engine = Engine::Std;
+    if (qt_->isChecked()) engine = Engine::Qt;
+    if (pcre2_->isChecked()) engine = Engine::Pcre2;
+
     type::StdSyntaxOption grammar = std::regex_constants::ECMAScript;
     if (basic_->isChecked()) grammar = std::regex_constants::basic;
     if (extended_->isChecked()) grammar = std::regex_constants::extended;
@@ -182,5 +205,27 @@ OptionsWidget::options_std() const noexcept {
     if (collate_->isChecked()) variations.push_back(std::regex_constants::collate);
     if (multiline_->isChecked()) variations.push_back(std::regex_constants::multiline);
 
-    return {grammar, variations};
+    return Content{.engine = engine, .grammar = grammar, .variations = variations};
+}
+
+/********************************************************************
+ *                                                                  *
+ *                            S L O T S                             *
+ *                                                                  *
+ ********************************************************************/
+
+// This slot is only one for all radio-buttons from tool group
+void OptionsWidget::tool_changed() noexcept {
+    if (std_->isChecked()) {
+        EventController::instance().send_event(event::StdRegexSelected);
+        return;
+    }
+    if (qt_->isChecked()) {
+        EventController::instance().send_event(event::QtRegexSelected);
+        return;
+    }
+    if (pcre2_->isChecked()) {
+        EventController::instance().send_event(event::PcreRegexSelected);
+        return;
+    }
 }

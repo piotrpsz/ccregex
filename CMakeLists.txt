@@ -27,8 +27,8 @@ set(APP_SOURCES
         main.cpp
         MainWindow.cc
         MainWindow.h
-        OptionsWidget.cc
-        OptionsWidget.h
+        options/OptionsWidget.cc
+        options/OptionsWidget.h
         Settings.h
         Editor.cc
         Editor.h
@@ -46,6 +46,14 @@ set(APP_SOURCES
         model/Match.h
         Highlighter.cc
         Highlighter.h
+        options/OptionsStacked.cc
+        options/OptionsStacked.h
+        options/QtOptionsWidget.cc
+        options/QtOptionsWidget.h
+        options/StdOptionsWidget.cc
+        options/StdOptionsWidget.h
+        options/PcreOptionsWidget.cc
+        options/PcreOptionsWidget.h
 )
 set(APP_LIBS
         Qt6::Core

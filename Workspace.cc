@@ -28,7 +28,7 @@
 #include "EventController.h"
 #include "WorkingWindow.h"
 #include "Settings.h"
-#include "OptionsWidget.h"
+#include "options/OptionsWidget.h"
 #include "model/Match.h"
 #include <QFileDialog>
 #include <QMessageBox>
@@ -40,7 +40,7 @@
 /*------- local constants:
 -------------------------------------------------------------------*/
 char const *const Workspace::NameFilter = QT_TR_NOOP("Regex: (*.%1)");
-char const *const Workspace::FileExt = QT_TR_NOOP("crgx");
+char const *const Workspace::FileExt = QT_TR_NOOP("json");
 char const *const Workspace::ReadError = QT_TR_NOOP("Something went wrong while reading the file.");
 char const * const Workspace::NoContentToSave = QT_TR_NOOP("There is no content to save.");
 char const * const Workspace::TryLater = QT_TR_NOOP("If you get something, try again.");
@@ -93,25 +93,19 @@ Workspace::~Workspace() {
 
 void Workspace::customEvent(QEvent *event) {
     auto const e = dynamic_cast<Event *>(event);
-    auto const type = static_cast<int>(e->type());
 
-    switch (type) {
+    switch (auto type = static_cast<int>(e->type()); type) {
         case event::RunRequest: {
             // Clear current visible matches content.
             current_mdiwidget()->clear_matches();
             // Fetch user setting.
             auto const data = e->data();
-            auto tool = data[0].toInt();
+            auto content = Content::from_json(data[0].toString().toStdString()).value();
             // Select tool and run.
-            if (tool == tool::Std) {
-                auto grammar = data[1].toInt();
-                auto variations = data[2].toString();
-                if (auto s = glz::read_json<std::vector<type::StdSyntaxOption>>(variations.toStdString()); s)
-                    run_std(type::StdSyntaxOption(grammar), s.value());
-            }
-            else if (tool == tool::Pcre2) {
+            if (content.engine == Engine::Std)
+                run_std(content);
+            else if (content.engine == Engine::Pcre2)
                 run_pcre2();
-            }
             e->accept();
             break;
         }
@@ -120,11 +114,11 @@ void Workspace::customEvent(QEvent *event) {
             e->accept();
             break;
         case event::SaveFile:
-            save();
+            save(e->data());
             e->accept();
             break;
         case event::SaveAsFile:
-            save_as();
+            save_as(e->data());
             e->accept();
             break;
         case event::ClearAll:
@@ -143,12 +137,13 @@ void Workspace::run_pcre2() noexcept {
     fmt::print("run pcre2\n");
 }
 
-void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> const& vars) noexcept {
-    auto opt = grammar;
-    for (auto it : vars)
+
+void Workspace::run_std(Content& content) noexcept {
+    auto opt = content.grammar;
+    for (auto it : content.variations)
         opt |= it;
 
-    auto const content = current_mdiwidget()->content();
+    current_mdiwidget()->fetch_content(content);
     auto pattern_lines = content.regex;
     auto source_lines = content.source;
     // We need and pattern and source text (both).
@@ -158,6 +153,8 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
     for (auto const& pattern : pattern_lines) {
         for (auto const& source : source_lines) {
             try {
+                std::locale::global(std::locale("pl_PL.UTF-8"));
+                std::setlocale(LC_ALL, "pl_PL.UTF-8");
                 std::regex rgx(pattern, opt);
                 auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
                 auto match_end_it = std::sregex_iterator();
@@ -188,13 +185,19 @@ void Workspace::run_std(type::StdSyntaxOption grammar, std::vector<type::StdSynt
     }
 }
 
-void Workspace::save() noexcept {
-    auto mdi_subwidget = current_mdiwidget();
+// Save current content and options on disk.
+void Workspace::save(QList<QVariant> const& data) noexcept {
+    auto content = Content::from_json(data[0].toString().toStdString()).value();
+    auto const mdi_subwidget{current_mdiwidget()};
+
+    // When current window is 'noname' call 'save_as'.
     if (mdi_subwidget->noname()) {
-        save_as();
+        save_as(data);
         return;
     }
-    auto const content = mdi_subwidget->content();
+
+    // Fetch content from editora and update 'content'.
+    mdi_subwidget->fetch_content(content);
 
     // It is nothing to save.
     if (content.empty()) {
@@ -209,9 +212,11 @@ void Workspace::save() noexcept {
     save(QFileInfo(mdi_subwidget->path()), content);
 }
 
-void Workspace::save_as() noexcept {
+// save the content under the name provided by the user.
+void Workspace::save_as(QList<QVariant> const& data) noexcept {
+    auto content = Content::from_json(data[0].toString().toStdString()).value();
     auto const mdi_subwidget = current_mdiwidget();
-    auto const content = mdi_subwidget->content();
+    mdi_subwidget->fetch_content(content);
 
     // It is nothing to save.
     if (content.empty()) {
@@ -250,6 +255,7 @@ void Workspace::save_as() noexcept {
     }
 }
 
+// Save passed content for specified file.
 void Workspace::save(QFileInfo const& fi, const Content& content) noexcept {
     last_used_dir_ = fi.absolutePath();
     last_used_file_name_ = fi.fileName();
@@ -258,7 +264,6 @@ void Workspace::save(QFileInfo const& fi, const Content& content) noexcept {
     if (f.is_open()) {
         auto str = content.to_json();
         f.write(str.data(), int(str.size()));
-
     }
 }
 

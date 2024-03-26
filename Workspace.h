@@ -52,7 +52,7 @@ private:
     /// Execute regex process for std.
     /// \param grammar - information about used grammar,
     /// \param variations - other user requirements
-    void run_std(type::StdSyntaxOption grammar, std::vector<type::StdSyntaxOption> const&variations) noexcept;
+    void run_std(Content& content) noexcept;
 
     void run_pcre2() noexcept;
 
@@ -63,11 +63,11 @@ private:
     /// Save content of current mdi-subwindow to the file on disk. \n
     /// If file already exists will overwrite. \n
     /// If 'noname' call save_as.
-    void save() noexcept;
+    void save(QList<QVariant> const& data) noexcept;
 
     /// Save content of current mdi-subwindow to file on disk. \n
     /// The user must provide a new file name.
-    void save_as() noexcept;
+    void save_as(QList<QVariant> const& data) noexcept;
 
     /// Write content to the file (overwrite if exists).
     /// \param fi - information about the file (path)

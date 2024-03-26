@@ -31,28 +31,20 @@
 #include <vector>
 #include <optional>
 #include <glaze/glaze.hpp>
+#include <fmt/core.h>
 
 /*------- struct:
 -------------------------------------------------------------------*/
 struct Content {
+    Engine engine{Engine::Std};
     strings source{};
     strings regex{};
     strings matches{};
-
-    Content() = default;
-    Content(auto regex_, auto source_, auto matches_) :
-        source{std::move(source_)},
-        regex{std::move(regex_)},
-        matches{std::move(matches_)}
-    {}
-    ~Content() = default;
-    Content(Content const&) = default;
-    Content(Content&&) = default;
-    Content& operator=(Content const&) = default;
-    Content& operator=(Content&&) = default;
+    type::StdSyntaxOption grammar{};
+    std::vector<type::StdSyntaxOption> variations{};
 
     bool empty() const noexcept {
-        return source.empty() and regex.empty() and matches.empty();
+        return source.empty() and regex.empty();
     }
 
     [[nodiscard]] std::string to_json(bool const pretty = false) const noexcept {
@@ -81,6 +73,10 @@ struct Content {
         s << "-- Result:\n";
         for (auto const& str : r.matches)
             s << '\t' << str << '\n';
+        s << "-- Grammar: " << r.grammar << '\n';
+        s << "-- Variationd: \n";
+        for (auto const& item : r.variations)
+            s << '\t' << item << '\n';
 
         return s;
     }
@@ -91,8 +87,11 @@ struct Content {
 template<>
 struct glz::meta<Content> {
     static constexpr auto value = object(
+            "engine", &Content::engine,
             "regex", &Content::regex,
             "source", &Content::source,
-            "result", &Content::matches
-            );
+            "result", &Content::matches,
+            "grammar", &Content::grammar,
+            "variations", &Content::variations
+    );
 };
