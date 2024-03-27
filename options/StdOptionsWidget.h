@@ -26,6 +26,7 @@
 /*------- include files:
 -------------------------------------------------------------------*/
 #include <QWidget>
+#include <string>
 
 /*------- forward declarations:
 -------------------------------------------------------------------*/
@@ -35,9 +36,10 @@ class QRadioButton;
 class StdOptionsWidget : public QWidget {
     Q_OBJECT
 public:
-    StdOptionsWidget(QWidget* = nullptr);
+    explicit StdOptionsWidget(QWidget* = nullptr);
     ~StdOptionsWidget() override = default;
 
+    std::string options() const noexcept;
 private:
     QRadioButton* const ecma_;
     QRadioButton* const basic_;

@@ -36,12 +36,10 @@
 /*------- struct:
 -------------------------------------------------------------------*/
 struct Content {
-    Engine engine{Engine::Std};
     strings source{};
     strings regex{};
     strings matches{};
-    type::StdSyntaxOption grammar{};
-    std::vector<type::StdSyntaxOption> variations{};
+    std::string options{};
 
     bool empty() const noexcept {
         return source.empty() and regex.empty();
@@ -73,9 +71,8 @@ struct Content {
         s << "-- Result:\n";
         for (auto const& str : r.matches)
             s << '\t' << str << '\n';
-        s << "-- Grammar: " << r.grammar << '\n';
-        s << "-- Variationd: \n";
-        for (auto const& item : r.variations)
+        s << "-- Options: \n";
+        for (auto const& item : r.options)
             s << '\t' << item << '\n';
 
         return s;
@@ -87,11 +84,9 @@ struct Content {
 template<>
 struct glz::meta<Content> {
     static constexpr auto value = object(
-            "engine", &Content::engine,
             "regex", &Content::regex,
             "source", &Content::source,
             "result", &Content::matches,
-            "grammar", &Content::grammar,
-            "variations", &Content::variations
+            "options", &Content::options
     );
 };

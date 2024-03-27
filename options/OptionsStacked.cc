@@ -72,5 +72,8 @@ void OptionsStacked::customEvent(QEvent* const event) {
 }
 
 std::string OptionsStacked::options() const noexcept {
+    auto const widget = currentWidget();
+    if (widget == std_options_widget_)
+        return std_options_widget_->options();
     return {};
 }

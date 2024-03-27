@@ -34,6 +34,7 @@
 #include <QMessageBox>
 #include <QMdiSubWindow>
 #include <fstream>
+#include <unordered_map>
 #include <fmt/core.h>
 #include <glaze/glaze.hpp>
 
@@ -92,6 +93,7 @@ Workspace::~Workspace() {
 }
 
 void Workspace::customEvent(QEvent *event) {
+    using namespace std;
     auto const e = dynamic_cast<Event *>(event);
 
     switch (auto type = static_cast<int>(e->type()); type) {
@@ -101,10 +103,12 @@ void Workspace::customEvent(QEvent *event) {
             // Fetch user setting.
             auto const data = e->data();
             auto content = Content::from_json(data[0].toString().toStdString()).value();
+            auto options = glz::read_json<unordered_map<string,int>>(content.options);
+            if (!options) return;
             // Select tool and run.
-            if (content.engine == Engine::Std)
+            if (options.value()["engine"] == int(Engine::Std))
                 run_std(content);
-            else if (content.engine == Engine::Pcre2)
+            else if (options.value()["engine"] == int(Engine::Pcre2))
                 run_pcre2();
             e->accept();
             break;
@@ -139,13 +143,20 @@ void Workspace::run_pcre2() noexcept {
 
 
 void Workspace::run_std(Content& content) noexcept {
-    auto opt = content.grammar;
-    for (auto it : content.variations)
-        opt |= it;
+    using namespace std;
 
+    // Read options from json from content.options.
+    auto const expected_options = glz::read_json<unordered_map<string,int>>(content.options);
+    if (!expected_options) return;
+    auto options = expected_options.value();
+    auto const grammar = options["grammar"];
+    auto const variations = options["variations"];
+    auto const opt = std::regex_constants::syntax_option_type(grammar | variations);
+
+    // fetch editors content to process
     current_mdiwidget()->fetch_content(content);
-    auto pattern_lines = content.regex;
-    auto source_lines = content.source;
+    auto pattern_lines = std::move(content.regex);
+    auto source_lines = std::move(content.source);
     // We need and pattern and source text (both).
     if (pattern_lines.empty() or source_lines.empty())
         return;
@@ -153,14 +164,12 @@ void Workspace::run_std(Content& content) noexcept {
     for (auto const& pattern : pattern_lines) {
         for (auto const& source : source_lines) {
             try {
-                std::locale::global(std::locale("pl_PL.UTF-8"));
-                std::setlocale(LC_ALL, "pl_PL.UTF-8");
-                std::regex rgx(pattern, opt);
+                regex rgx(pattern, opt);
                 auto match_begin_it = std::sregex_iterator(source.begin(), source.end(), rgx);
-                auto match_end_it = std::sregex_iterator();
-                std::vector<Match> buffer;
+                auto match_end_it = sregex_iterator();
+                vector<Match> buffer;
                 for (auto it = match_begin_it; it != match_end_it; ++it) {
-                    std::smatch const& match = *it;
+                    smatch const& match = *it;
                     EventController::instance().send_event(event::AppendLine, "--------------------------");
                     for (uint i = 0; i < match.size(); ++i) {
                         auto const pos = int(match.position(i));
@@ -175,7 +184,7 @@ void Workspace::run_std(Content& content) noexcept {
                 auto matches_json = glz::write_json(buffer);
                 EventController::instance().send_event(event::Match, qstr::fromStdString(matches_json));
             }
-            catch (std::regex_error const& e) {
+            catch (regex_error const& e) {
                 auto msg = qstr::fromStdString(e.what());
                 QMessageBox::critical((QWidget *) this, Error, msg);
                 return;
@@ -187,6 +196,7 @@ void Workspace::run_std(Content& content) noexcept {
 
 // Save current content and options on disk.
 void Workspace::save(QList<QVariant> const& data) noexcept {
+//    auto const
     auto content = Content::from_json(data[0].toString().toStdString()).value();
     auto const mdi_subwidget{current_mdiwidget()};
 
@@ -262,7 +272,7 @@ void Workspace::save(QFileInfo const& fi, const Content& content) noexcept {
 
     std::ofstream f(fi.absoluteFilePath().toStdString());
     if (f.is_open()) {
-        auto str = content.to_json();
+        auto str = content.to_json(true);
         f.write(str.data(), int(str.size()));
     }
 }

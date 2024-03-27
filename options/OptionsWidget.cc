@@ -35,6 +35,7 @@
 #include <QApplication>
 #include <QRadioButton>
 #include <iostream>
+#include <unordered_map>
 #include <glaze/glaze.hpp>
 
 /*------- local constants:
@@ -126,13 +127,18 @@ void OptionsWidget::customEvent(QEvent* const event) {
 }
 
 void OptionsWidget::run_slot() const noexcept {
-    switch (auto content = options(); content.engine) {
-        case Engine::Std: {
+    using namespace std;
+    auto content = options();
+    auto options = glz::read_json<unordered_map<string,int>>(content.options);
+    if (!options) return;
+
+    switch (options.value()["engine"]) {
+        case int(Engine::Std): {
             auto json = glz::write_json(content);
             EventController::instance().send_event(event::RunRequest, qstr::fromStdString(json));
             break;
         }
-        case Engine::Pcre2: {
+        case int(Engine::Pcre2): {
             auto json = glz::write_json(content);
             EventController::instance().send_event(event::RunRequest, qstr::fromStdString(json));
             break;
@@ -143,26 +149,8 @@ void OptionsWidget::run_slot() const noexcept {
 }
 
 Content OptionsWidget::options() const noexcept {
-//    auto engine = Engine::Std;
-//    if (qt_->isChecked()) engine = Engine::Qt;
-//    if (pcre2_->isChecked()) engine = Engine::Pcre2;
-//
-//    type::StdSyntaxOption grammar = std::regex_constants::ECMAScript;
-//    if (basic_->isChecked()) grammar = std::regex_constants::basic;
-//    if (extended_->isChecked()) grammar = std::regex_constants::extended;
-//    if (awk_->isChecked()) grammar = std::regex_constants::awk;
-//    if (grep_->isChecked()) grammar = std::regex_constants::grep;
-//    if (egrep_->isChecked()) grammar = std::regex_constants::egrep;
-//
-//    std::vector<type::StdSyntaxOption> variations{};
-//    if (icace_->isChecked()) variations.push_back(std::regex_constants::icase);
-//    if (nosubs_->isChecked()) variations.push_back(std::regex_constants::nosubs);
-//    if (optimize_->isChecked()) variations.push_back(std::regex_constants::optimize);
-//    if (collate_->isChecked()) variations.push_back(std::regex_constants::collate);
-//    if (multiline_->isChecked()) variations.push_back(std::regex_constants::multiline);
-//
-//    return Content{.engine = engine, .grammar = grammar, .variations = variations};
-    return {};
+    auto opts = options_stacked_->options();
+    return Content{.options = opts};
 }
 
 /********************************************************************

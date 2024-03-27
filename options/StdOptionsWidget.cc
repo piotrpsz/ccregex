@@ -24,12 +24,16 @@
 
 /*------- include files:
 -------------------------------------------------------------------*/
+#include "../Types.h"
 #include "../Settings.h"
 #include "StdOptionsWidget.h"
 #include <QGroupBox>
 #include <QCheckBox>
 #include <QVBoxLayout>
 #include <QRadioButton>
+#include <unordered_map>
+#include <fmt/core.h>
+#include <glaze/glaze.hpp>
 
 /*------- local constants:
 -------------------------------------------------------------------*/
@@ -87,4 +91,28 @@ StdOptionsWidget::StdOptionsWidget(QWidget* const parent) :
     main_layout->setSpacing(Settings::NoSpacing);
     main_layout->setContentsMargins(Settings::NoMargins);
     setLayout(main_layout);
+}
+
+std::string StdOptionsWidget::options() const noexcept {
+    std::unordered_map<std::string, int> data{};
+    data["engine"] = int(Engine::Std);
+
+    auto grammar = std::regex_constants::ECMAScript;
+    if (basic_->isChecked()) grammar = std::regex_constants::basic;
+    else if (extended_->isChecked()) grammar = std::regex_constants::extended;
+    else if (awk_->isChecked()) grammar = std::regex_constants::awk;
+    else if (grep_->isChecked()) grammar = std::regex_constants::grep;
+    else if (egrep_->isChecked()) grammar = std::regex_constants::egrep;
+    data["grammar"] = grammar;
+
+    std::regex_constants::syntax_option_type variations{};
+    if (icace_->isChecked()) variations |= std::regex_constants::icase;
+    if (nosubs_->isChecked()) variations |= std::regex_constants::nosubs;
+    if (optimize_->isChecked()) variations |= std::regex_constants::optimize;
+    if (collate_->isChecked()) variations |= std::regex_constants::collate;
+    if (multiline_->isChecked()) variations |= std::regex_constants::multiline;
+    data["variations"] = variations;
+
+//    return glz::prettify(glz::write_json(data));
+    return glz::write_json(data);
 }
