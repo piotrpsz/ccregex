@@ -51,11 +51,14 @@ public:
 
 private slots:
     void run_slot() const noexcept;
-    static void claer_all() noexcept {
+    static void clear_all() noexcept {
         EventController::instance().send_event(event::ClearAll);
     }
-    static void claer_matches() noexcept {
+    static void clear_matches() noexcept {
         EventController::instance().send_event(event::ClearMatches);
+    }
+    static void new_document() noexcept {
+        EventController::instance().send_event(event::New);
     }
     void tool_changed() noexcept;
 
@@ -65,17 +68,13 @@ private:
     QRadioButton* const qt_;
     QRadioButton* const pcre2_;
 
-    QPushButton* const run_;
-    QPushButton* const clear_all_;
-    QPushButton* const clear_matches_;
-    QPushButton* const exit_;
-
     static char const * const StdRegex;
     static char const * const QtRegex;
     static char const * const PcreRegex;
 
-    static char const * const Run;
+    static char const * const NewDocument;
     static char const * const ClearAll;
     static char const * const ClearMatches;
+    static char const * const Run;
     static char const * const Exit;
 };

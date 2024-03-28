@@ -31,6 +31,7 @@
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QBoxLayout>
+#include <QGridLayout>
 #include <QPushButton>
 #include <QApplication>
 #include <QRadioButton>
@@ -43,9 +44,10 @@
 char const *const OptionsWidget::StdRegex = QT_TR_NOOP("std::regex [standard since C++11]");
 char const *const OptionsWidget::QtRegex = QT_TR_NOOP("Qt::QRegularExpression [Qt]");
 char const *const OptionsWidget::PcreRegex = QT_TR_NOOP("pcre2 [library using Perl5 syntax and semantic]");
-char const *const OptionsWidget::Run = QT_TR_NOOP("Run");
+char const *const OptionsWidget::NewDocument = QT_TR_NOOP("New");
 char const *const OptionsWidget::ClearAll = QT_TR_NOOP("Clear");
 char const *const OptionsWidget::ClearMatches = QT_TR_NOOP("Clear Matches");
+char const *const OptionsWidget::Run = QT_TR_NOOP("Run");
 char const *const OptionsWidget::Exit = QT_TR_NOOP("Exit");
 
 /*------- class implementation:
@@ -55,54 +57,55 @@ OptionsWidget::OptionsWidget(QWidget *const parent) :
         options_stacked_{new OptionsStacked},
         std_{new QRadioButton{tr(StdRegex)}},
         qt_{new QRadioButton{tr(QtRegex)}},
-        pcre2_{new QRadioButton{tr(PcreRegex)}},
-        run_{new QPushButton{tr(Run)}},
-        clear_all_{new QPushButton{tr(ClearAll)}},
-        clear_matches_{new QPushButton{tr(ClearMatches)}},
-        exit_{new QPushButton{tr(Exit)}}
+        pcre2_{new QRadioButton{tr(PcreRegex)}}
 {
     // Initial settings
     std_->setChecked(true);
     pcre2_->setEnabled(false);
 
     // TOOL group/layout
-    auto tool_layout{new QVBoxLayout};
+    auto const tool_layout{new QVBoxLayout};
     tool_layout->addWidget(std_);
     tool_layout->addWidget(qt_);
 #ifdef PCRE2_REGEX
     tool_layout->addWidget(pcre2_);
 #endif
-    auto tool_group{new QGroupBox{"Tool"}};
+    auto const tool_group{new QGroupBox{"Tool"}};
     tool_group->setLayout(tool_layout);
     connect(std_, &QRadioButton::clicked, this, &OptionsWidget::tool_changed);
     connect(qt_, &QRadioButton::clicked, this, &OptionsWidget::tool_changed);
 
-    auto buttons_layout{new QHBoxLayout};
-    buttons_layout->addWidget(run_);
-    buttons_layout->addWidget(clear_all_);
-    buttons_layout->addWidget(clear_matches_);
+    // Buttons
+    auto const buttons_layout{new QGridLayout};
+    auto const run_button{new QPushButton{tr(Run)}};
+    auto const exit_button{new QPushButton{tr(Exit)}};
+    auto const new_button{new QPushButton{tr(NewDocument)}};
+    auto const clear_all_button{new QPushButton{tr(ClearAll)}};
+    auto const clear_matches_button{new QPushButton{tr(ClearMatches)}};
 
-    auto exit_button_layout{new QHBoxLayout};
-    exit_button_layout->addStretch();
-    exit_button_layout->addWidget(exit_);
+    buttons_layout->addWidget(new_button, 0, 0);
+    buttons_layout->addWidget(clear_all_button, 0, 1);
+    buttons_layout->addWidget(clear_matches_button, 0, 2);
+    buttons_layout->addWidget(run_button, 1, 1);
+    buttons_layout->addWidget(exit_button, 1, 2);
+
+    connect(run_button, &QPushButton::pressed, this, &OptionsWidget::run_slot);
+    connect(exit_button, &QPushButton::pressed, this, &QApplication::quit);
+    connect(clear_all_button, &QPushButton::pressed, this, &OptionsWidget::clear_all);
+    connect(clear_matches_button, &QPushButton::pressed, this, &OptionsWidget::clear_matches);
+    connect(new_button, &QPushButton::pressed, this, &OptionsWidget::new_document);
 
     auto main_layout{new QVBoxLayout};
     main_layout->addWidget(tool_group);
     main_layout->addWidget(options_stacked_);
     main_layout->addStretch();
     main_layout->addLayout(buttons_layout);
-    main_layout->addLayout(exit_button_layout);
     setLayout(main_layout);
 
-
+    // fit to content size and don't resize
     auto w = main_layout->minimumSize().width();
     setMinimumWidth(w);
     setMaximumWidth(w);
-
-    connect(run_, &QPushButton::pressed, this, &OptionsWidget::run_slot);
-    connect(clear_all_, &QPushButton::pressed, this, &OptionsWidget::claer_all);
-    connect(clear_matches_, &QPushButton::pressed, this, &OptionsWidget::claer_matches);
-    connect(exit_, &QPushButton::pressed, this, &QApplication::quit);
 
     EventController::instance().append(this, event::SaveFileRequest);
 }

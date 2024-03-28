@@ -58,6 +58,7 @@ namespace event {
         AppendLine,
         ClearAll,
         ClearMatches,
+        New,
         Match,
         StdRegexSelected,
         QtRegexSelected,
