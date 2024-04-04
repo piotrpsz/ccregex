@@ -329,6 +329,7 @@ void Workspace::open() noexcept {
             // Populate current sub-window if 'noname'.
             if (auto const it = current_mdiwidget(); it->noname()) {
                 it->set_content(path, content.value());
+                EventController::instance().send_event(event::UpdateOptionsForLoadedFile, qstr::fromStdString(buffer));
                 return;
             }
 
@@ -336,6 +337,9 @@ void Workspace::open() noexcept {
             auto ww = new WorkingWindow(fi.absoluteFilePath(), fi.baseName());
             ww->set_content(content.value());
             addSubWindow(ww)->show();
+
+            EventController::instance().send_event(event::UpdateOptionsForLoadedFile, qstr::fromStdString(buffer));
+            fmt::print("sended event::UpdateOptionsForLoadedFile");
         }
     }
 }

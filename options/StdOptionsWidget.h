@@ -40,6 +40,7 @@ public:
     ~StdOptionsWidget() override = default;
 
     std::string options() const noexcept;
+    void update_options(QString const& str) noexcept;
 private:
     QRadioButton* const ecma_;
     QRadioButton* const basic_;

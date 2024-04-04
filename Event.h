@@ -63,5 +63,6 @@ namespace event {
         StdRegexSelected,
         QtRegexSelected,
         PcreRegexSelected,
+        UpdateOptionsForLoadedFile,
    };
 }

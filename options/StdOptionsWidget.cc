@@ -26,6 +26,7 @@
 -------------------------------------------------------------------*/
 #include "../Types.h"
 #include "../Settings.h"
+#include "../Content.h"
 #include "StdOptionsWidget.h"
 #include <QGroupBox>
 #include <QCheckBox>
@@ -34,6 +35,7 @@
 #include <unordered_map>
 #include <fmt/core.h>
 #include <glaze/glaze.hpp>
+using namespace std;
 
 /*------- local constants:
 -------------------------------------------------------------------*/
@@ -115,4 +117,42 @@ std::string StdOptionsWidget::options() const noexcept {
 
 //    return glz::prettify(glz::write_json(data));
     return glz::write_json(data);
+}
+
+void StdOptionsWidget::update_options(QString const& str) noexcept {
+    auto content = Content::from_json(str.toStdString());
+    if (auto data = glz::read_json<unordered_map<string, int>>(content->options); data.has_value()) {
+        if (auto map = data.value(); map["engine"] == 0) {
+            switch (map["engine"]) {
+                case std::regex_constants::basic:
+                    basic_->setChecked(true);
+                    break;
+                case std::regex_constants::extended:
+                    extended_->setChecked(true);
+                    break;
+                case std::regex_constants::awk:
+                    awk_->setChecked(true);
+                    break;
+                case std::regex_constants::grep:
+                    grep_->setChecked(true);
+                    break;
+                case std::regex_constants::egrep:
+                    egrep_->setChecked(true);
+                    break;
+                default:
+                    ecma_->setChecked(true);
+            }
+            auto const var = map["variations"];
+            if (var & std::regex_constants::icase)
+                icace_->setChecked(true);
+            if (var & std::regex_constants::nosubs)
+                nosubs_->setChecked(true);
+            if (var & std::regex_constants::optimize)
+                optimize_->setChecked(true);
+            if (var & std::regex_constants::collate)
+                collate_->setChecked(true);
+            if (var & std::regex_constants::multiline)
+                multiline_->setChecked(true);
+        }
+    }
 }

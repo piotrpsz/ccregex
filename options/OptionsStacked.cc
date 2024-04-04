@@ -29,6 +29,7 @@
 #include "QtOptionsWidget.h"
 #include "PcreOptionsWidget.h"
 #include "../EventController.h"
+#include <fmt/core.h>
 
 OptionsStacked::OptionsStacked(QWidget* const parent) :
         QStackedWidget(parent),
@@ -43,6 +44,7 @@ OptionsStacked::OptionsStacked(QWidget* const parent) :
     EventController::instance().append(this, event::StdRegexSelected);
     EventController::instance().append(this, event::QtRegexSelected);
     EventController::instance().append(this, event::PcreRegexSelected);
+    EventController::instance().append(this, event::UpdateOptionsForLoadedFile);
 }
 
 OptionsStacked::~OptionsStacked() {
@@ -65,6 +67,9 @@ void OptionsStacked::customEvent(QEvent* const event) {
             setCurrentWidget(pcre_options_widget_);
             event->accept();
             break;
+        case UpdateOptionsForLoadedFile:
+            update_options(e->data()[0].toString());
+            event->accept();
         default:
         {}
     }
@@ -76,4 +81,10 @@ std::string OptionsStacked::options() const noexcept {
     if (widget == std_options_widget_)
         return std_options_widget_->options();
     return {};
+}
+
+void OptionsStacked::update_options(const QString& str) noexcept {
+    auto const widget = currentWidget();
+    if (widget == std_options_widget_)
+        std_options_widget_->update_options(str);
 }

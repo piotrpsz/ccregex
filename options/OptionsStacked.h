@@ -43,7 +43,8 @@ public:
     explicit OptionsStacked(QWidget* parent = nullptr);
     ~OptionsStacked() override;
 
-    std::string options() const noexcept;
+    [[nodiscard]] std::string options() const noexcept;
+    void update_options(QString const& str) noexcept;
 
 private:
     void customEvent(QEvent*) override;

@@ -30,6 +30,7 @@
 #include "../EventController.h"
 #include <QCheckBox>
 #include <QGroupBox>
+#include <QLabel>
 #include <QBoxLayout>
 #include <QGridLayout>
 #include <QPushButton>
@@ -76,18 +77,20 @@ OptionsWidget::OptionsWidget(QWidget *const parent) :
     connect(qt_, &QRadioButton::clicked, this, &OptionsWidget::tool_changed);
 
     // Buttons
-    auto const buttons_layout{new QGridLayout};
     auto const run_button{new QPushButton{tr(Run)}};
     auto const exit_button{new QPushButton{tr(Exit)}};
     auto const new_button{new QPushButton{tr(NewDocument)}};
     auto const clear_all_button{new QPushButton{tr(ClearAll)}};
     auto const clear_matches_button{new QPushButton{tr(ClearMatches)}};
 
-    buttons_layout->addWidget(new_button, 0, 0);
-    buttons_layout->addWidget(clear_all_button, 0, 1);
-    buttons_layout->addWidget(clear_matches_button, 0, 2);
-    buttons_layout->addWidget(run_button, 1, 1);
-    buttons_layout->addWidget(exit_button, 1, 2);
+    auto const buttons_layout{new QGridLayout};
+    buttons_layout->addWidget(run_button, 0, 0);
+    buttons_layout->addWidget(exit_button, 0, 2);
+    buttons_layout->addWidget(new QLabel, 1, 0);
+    buttons_layout->addWidget(new_button, 2, 0);
+    buttons_layout->addWidget(clear_all_button, 2, 1);
+    buttons_layout->addWidget(clear_matches_button, 2, 2);
+
 
     connect(run_button, &QPushButton::pressed, this, &OptionsWidget::run_slot);
     connect(exit_button, &QPushButton::pressed, this, &QApplication::quit);
